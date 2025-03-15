@@ -1,0 +1,26 @@
+package bootstrap
+
+import (
+	"flag"
+
+	"github.com/caarlos0/env"
+)
+
+type Config struct {
+	RunAddress     string `env:"RUN_ADDRESS"`
+	DSN            string `env:"DATABASE_URI"`
+	AccrualAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	ContextTimeout int64  `env:"CONTEXT_TIMEOUT" envDefault:"3"`
+}
+
+// -a-d-r
+func MustLoad() (*Config, error) {
+	cfg := &Config{}
+	flag.StringVar(&cfg.RunAddress, "a", "localhost:8080", "address and port to run server")
+	flag.StringVar(&cfg.DSN, "d", "postgres://postgres:postgres@localhost:5432/gophermart?sslmode=disable", "database dsn")
+	flag.StringVar(&cfg.AccrualAddress, "r", "", "accrual system address")
+	flag.Int64Var(&cfg.ContextTimeout, "t", 3, "time for timeout")
+	flag.Parse()
+	err := env.Parse(cfg)
+	return cfg, err
+}
