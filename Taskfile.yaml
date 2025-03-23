@@ -1,0 +1,12 @@
+version: '3'
+tasks:
+  migrate:
+    aliases:
+      - migrate
+    desc: 'run migrations'
+    cmds:
+      - go run cmd/migrator/main.go
+  app:
+    desc: 'run app'
+    cmds:
+      - go run cmd/gophermart/main.go

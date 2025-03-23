@@ -17,5 +17,5 @@ func NewLoginRouter(cfg *bootstrap.Config, timeout time.Duration, db db.DB, rout
 		LoginUsecase: usecase.NewLoginUsecase(lr, timeout),
 		Cfg:          cfg,
 	}
-	router.Post("/api/user/login", lc.Login)
+	router.Post("/login", lc.Login)
 }

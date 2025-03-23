@@ -10,6 +10,10 @@ import (
 
 func Setup(cfg *bootstrap.Config, timeout time.Duration, db db.DB, r *chi.Mux) {
 	r.Group(func(r chi.Router) {
-		NewLoginRouter(cfg, timeout, db, r)
+		r.Route("/api/user", func(r chi.Router) {
+			NewLoginRouter(cfg, timeout, db, r)
+			NewRegisterRouter(cfg, timeout, db, r)
+		})
+
 	})
 }
