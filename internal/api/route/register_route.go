@@ -9,13 +9,12 @@ import (
 	"github.com/timuraipov/diploma/internal/repository"
 	"github.com/timuraipov/diploma/internal/storage/db"
 	"github.com/timuraipov/diploma/internal/usecase"
+	"github.com/timuraipov/diploma/pkg/logging"
 )
 
-func NewRegisterRouter(cfg *bootstrap.Config, timeout time.Duration, db db.DB, router chi.Router) {
+func NewRegisterRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout time.Duration, db db.DB, router chi.Router) {
 	lr := repository.NewRegisterRepository(db)
-	lc := &controller.RegisterController{
-		RegisterUsecase: usecase.NewLoginUsecase(lr, timeout),
-		Cfg:             cfg,
-	}
+	registerUsecase := usecase.NewRegisterUsecase(logger, lr, timeout)
+	lc := controller.NewRegisterController(logger, registerUsecase, cfg)
 	router.Post("/register", lc.Register)
 }

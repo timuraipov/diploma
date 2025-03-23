@@ -9,13 +9,12 @@ import (
 	"github.com/timuraipov/diploma/internal/repository"
 	"github.com/timuraipov/diploma/internal/storage/db"
 	"github.com/timuraipov/diploma/internal/usecase"
+	"github.com/timuraipov/diploma/pkg/logging"
 )
 
-func NewLoginRouter(cfg *bootstrap.Config, timeout time.Duration, db db.DB, router chi.Router) {
+func NewLoginRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout time.Duration, db db.DB, router chi.Router) {
 	lr := repository.NewLoginRepository(db)
-	lc := &controller.LoginController{
-		LoginUsecase: usecase.NewLoginUsecase(lr, timeout),
-		Cfg:          cfg,
-	}
+	lu := usecase.NewLoginUsecase(logger, lr, timeout)
+	lc := controller.NewLoginController(logger, lu, cfg)
 	router.Post("/login", lc.Login)
 }

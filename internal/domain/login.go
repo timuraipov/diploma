@@ -2,19 +2,17 @@ package domain
 
 import "context"
 
-type RegisterRequest struct {
+type LoginRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-type RegisterResponse struct {
+type LoginResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
-type RegisterUsecase interface {
-	Create(ctx context.Context, user *User) error
-	GetByLogin(ctx context.Context, login string) (User, error)
-	GetByID(ctx context.Context, id string) (User, error)
+type LoginUsecase interface {
+	GetUserByLogin(c context.Context, login string) (User, error)
 	CreateAccessToken(user *User, secret string, expiry int) (accessToken string, err error)
 	CreateRefreshToken(user *User, secret string, expiry int) (refreshToken string, err error)
 }
