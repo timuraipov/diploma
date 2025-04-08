@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/timuraipov/diploma/internal/domain"
+	"github.com/timuraipov/diploma/internal/tokenutil"
 	"github.com/timuraipov/diploma/pkg/logging"
 )
 
@@ -33,8 +34,8 @@ func (ru *RegisterUsecase) GetByID(ctx context.Context, id string) (domain.User,
 	return domain.User{}, nil
 }
 func (ru *RegisterUsecase) CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
-	return "", nil
+	return tokenutil.CreateAccessToken(user, secret, expiry)
 }
 func (ru *RegisterUsecase) CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshToken string, err error) {
-	return "", nil
+	return tokenutil.CreateRefreshToken(user, secret, expiry)
 }

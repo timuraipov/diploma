@@ -13,7 +13,7 @@ import (
 )
 
 func NewRegisterRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout time.Duration, db db.DB, router chi.Router) {
-	lr := repository.NewRegisterRepository(db)
+	lr := repository.NewUserRepository(db)
 	registerUsecase := usecase.NewRegisterUsecase(logger, lr, timeout)
 	lc := controller.NewRegisterController(logger, registerUsecase, cfg)
 	router.Post("/register", lc.Register)

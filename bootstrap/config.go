@@ -7,10 +7,14 @@ import (
 )
 
 type Config struct {
-	RunAddress     string `env:"RUN_ADDRESS"`
-	DSN            string `env:"DATABASE_URI"`
-	AccrualAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
-	ContextTimeout int64  `env:"CONTEXT_TIMEOUT" envDefault:"3"`
+	RunAddress             string `env:"RUN_ADDRESS"`
+	DSN                    string `env:"DATABASE_URI"`
+	AccrualAddress         string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	ContextTimeout         int64  `env:"CONTEXT_TIMEOUT" envDefault:"3"`
+	AccessTokenExpiryHour  int    `env:"ACCESS_TOKEN_EXPIRY_HOUR" envDefault:"2"`
+	RefreshTokenExpiryHour int    `env:"REFRESH_TOKEN_EXPIRY_HOUR" envDefault:"48"`
+	AccessTokenSecret      string `env:"ACCESS_TOKEN_SECRET" envDefault:"secret"`
+	RefreshTokenSecret     string `env:"REFRESH_TOKEN_SECRET" envDefault:"secret"`
 }
 
 // -a-d-r

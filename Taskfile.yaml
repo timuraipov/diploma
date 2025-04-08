@@ -10,3 +10,11 @@ tasks:
     desc: 'run app'
     cmds:
       - go run cmd/gophermart/main.go
+  test:
+    desc: 'run tests'
+    cmds:
+      - DATABASE_URI=postgres://postgres:postgres@localhost:5432/gophermart_test?sslmode=disable go test ./...  -coverprofile=coverage.out count=1
+  lint:
+    desc: 'run linters'
+    cmds:
+      - golangci-lint run

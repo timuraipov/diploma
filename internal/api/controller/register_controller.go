@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/timuraipov/diploma/bootstrap"
@@ -55,6 +54,22 @@ func (rc *RegisterController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Print("login:", request.Login, " password:", request.Password)
-	w.Write([]byte(`success`))
+	accessToken, err := rc.registerUsecase.CreateAccessToken(&user, rc.cfg.AccessTokenSecret, rc.cfg.AccessTokenExpiryHour)
+	if err != nil {
+		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	refreshToken, err := rc.registerUsecase.CreateRefreshToken(&user, rc.cfg.RefreshTokenSecret, rc.cfg.RefreshTokenExpiryHour)
+	if err != nil {
+		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
+		return
+	}
+	signupResponse := domain.RegisterResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(signupResponse)
 }

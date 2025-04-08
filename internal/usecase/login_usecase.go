@@ -5,16 +5,17 @@ import (
 	"time"
 
 	"github.com/timuraipov/diploma/internal/domain"
+	"github.com/timuraipov/diploma/internal/tokenutil"
 	"github.com/timuraipov/diploma/pkg/logging"
 )
 
 type loginUsecase struct {
 	l              *logging.ZapLogger
-	userRepository domain.MockRepository
+	userRepository domain.UserRepository
 	contextTimeout time.Duration
 }
 
-func NewLoginUsecase(logger *logging.ZapLogger, userRepository domain.MockRepository, timeout time.Duration) domain.LoginUsecase {
+func NewLoginUsecase(logger *logging.ZapLogger, userRepository domain.UserRepository, timeout time.Duration) domain.LoginUsecase {
 	return &loginUsecase{
 		l:              logger,
 		userRepository: userRepository,
@@ -22,12 +23,14 @@ func NewLoginUsecase(logger *logging.ZapLogger, userRepository domain.MockReposi
 	}
 }
 
-func (lu *loginUsecase) GetUserByLogin(c context.Context, login string) (domain.User, error) {
-	return domain.User{}, nil
+func (lu *loginUsecase) GetUserByLogin(ctx context.Context, login string) (domain.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, lu.contextTimeout)
+	defer cancel()
+	return lu.userRepository.GetByLogin(ctx, login)
 }
 func (lu *loginUsecase) CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
-	return "", nil
+	return tokenutil.CreateAccessToken(user, secret, expiry)
 }
 func (lu *loginUsecase) CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshToken string, err error) {
-	return "", nil
+	return tokenutil.CreateRefreshToken(user, secret, expiry)
 }

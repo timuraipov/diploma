@@ -13,7 +13,7 @@ import (
 )
 
 func NewLoginRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout time.Duration, db db.DB, router chi.Router) {
-	lr := repository.NewLoginRepository(db)
+	lr := repository.NewUserRepository(db)
 	lu := usecase.NewLoginUsecase(logger, lr, timeout)
 	lc := controller.NewLoginController(logger, lu, cfg)
 	router.Post("/login", lc.Login)
