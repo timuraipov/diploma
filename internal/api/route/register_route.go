@@ -16,5 +16,5 @@ func NewRegisterRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout
 	lr := repository.NewUserRepository(db)
 	registerUsecase := usecase.NewRegisterUsecase(logger, lr, timeout)
 	lc := controller.NewRegisterController(logger, registerUsecase, cfg)
-	router.Post("/register", lc.Register)
+	router.Post("/api/user/register", lc.Register)
 }

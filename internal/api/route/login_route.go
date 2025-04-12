@@ -16,5 +16,5 @@ func NewLoginRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout ti
 	lr := repository.NewUserRepository(db)
 	lu := usecase.NewLoginUsecase(logger, lr, timeout)
 	lc := controller.NewLoginController(logger, lu, cfg)
-	router.Post("/login", lc.Login)
+	router.Post("/api/user/orders", lc.Login)
 }
