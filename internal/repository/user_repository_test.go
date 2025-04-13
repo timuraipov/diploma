@@ -11,7 +11,7 @@ import (
 
 var testRepository *userRepository
 
-func setupTestDB(t *testing.T) {
+func setupTestDBUser(t *testing.T) {
 
 	dsn := os.Getenv("DATABASE_URI")
 	if dsn == "" {
@@ -35,7 +35,7 @@ func setupTestDB(t *testing.T) {
 	testRepository = NewUserRepository(*db)
 }
 
-func cleanupTestDB(t *testing.T) {
+func cleanupTestDBUser(t *testing.T) {
 	_, err := testRepository.database.Pool.Exec(context.Background(), `DROP TABLE "user"`)
 	if err != nil {
 		t.Fatalf("failed to drop table: %v", err)
@@ -43,8 +43,8 @@ func cleanupTestDB(t *testing.T) {
 }
 
 func TestUserRepository_CreateAndGetUserByLogin(t *testing.T) {
-	setupTestDB(t)
-	defer cleanupTestDB(t)
+	setupTestDBUser(t)
+	defer cleanupTestDBUser(t)
 
 	testCases := []struct {
 		name     string
@@ -84,8 +84,8 @@ func TestUserRepository_CreateAndGetUserByLogin(t *testing.T) {
 }
 
 func TestUserRepository_GetByID(t *testing.T) {
-	setupTestDB(t)
-	defer cleanupTestDB(t)
+	setupTestDBUser(t)
+	defer cleanupTestDBUser(t)
 
 	// Create a test user
 	user := domain.User{

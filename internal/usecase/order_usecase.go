@@ -23,7 +23,9 @@ func NewOrderUseCase(l *logging.ZapLogger, ur domain.OrderRepository, timeout ti
 }
 
 func (o *OrderUseCase) Save(ctx context.Context, order domain.Order) error {
-	return nil
+	err := o.orderRepository.Save(ctx, order)
+
+	return err
 }
 func (o *OrderUseCase) GetAll(ctx context.Context, userId int64) ([]domain.Order, error) {
 	orders, err := o.orderRepository.GetAll(ctx, userId)

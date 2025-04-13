@@ -3,7 +3,7 @@ package controller
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"time"
@@ -29,25 +29,36 @@ func NewOrderController(l *logging.ZapLogger, orderUseCase domain.OrderUseCase, 
 }
 
 func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
-	userId := int64(2)
-
+	userId := r.Context().Value("x-user-id").(int64)
 	orderId, err := io.ReadAll(bufio.NewReader(r.Body))
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), "invalid data")
 	}
+	o.l.InfoCtx(r.Context(), "orderId", zap.Any("orderId", orderId))
 	order := domain.Order{
-		Number:     string(orderId),
-		Status:     "NEW",
+		ID:         string(orderId),
+		Status:     domain.NEW,
 		Accrual:    0,
 		UserId:     userId,
-		UploadedAt: time.Now().Format(time.RFC3339),
+		UploadedAt: time.Now(), //time.Now().Format(time.RFC3339),
 	}
-	fmt.Print(order)
-	w.WriteHeader(http.StatusOK)
+
+	err = o.orderUseCase.Save(r.Context(), order)
+	o.l.InfoCtx(r.Context(), "trying to save order", zap.Any("order", order), zap.Error(err))
+	if err != nil {
+		if errors.Is(err, domain.OrderAlreadyInProcessing) {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if errors.Is(err, domain.OrderAlreadyProcessedByAnotherUser) {
+			w.WriteHeader(http.StatusConflict)
+		}
+	}
+	w.WriteHeader(http.StatusAccepted)
 }
 func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value("x-user-id").(int64)
-	o.l.InfoCtx(r.Context(), "userId", zap.Any("userId", userId))
+	o.l.InfoCtx(r.Context(), "userId", zap.Int64("userId", userId))
 	orders, err := o.orderUseCase.GetAll(r.Context(), userId)
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), err.Error())

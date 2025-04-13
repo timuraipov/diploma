@@ -1,7 +1,7 @@
 CREATE TABLE "order"(
-    id       INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    status VARCHAR(20) NOT NULL UNIQUE,
-    user_id  INT NOT NULL,
-    number    VARCHAR(200) NOT NULL UNIQUE,
+    id          VARCHAR(30) PRIMARY KEY ,
+    status      VARCHAR(20) NOT NULL,
+    user_id     INT NOT NULL,
+    accrual     INT DEFAULT 0,
     uploaded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now() 
 );

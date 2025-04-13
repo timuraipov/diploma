@@ -82,9 +82,11 @@ func (z *ZapLogger) withCtxFields(ctx context.Context, fields ...zap.Field) []za
 		ctxFields.Append(fields...)
 	} else {
 		ctxFields = make(ZapFields)
-		ctxFields.Append(fields...)
-	}
+		for _, field := range fields {
+			ctxFields[field.Key] = field
+		}
 
+	}
 	maskedFields := make([]zap.Field, 0, len(fields))
 
 	for _, f := range ctxFields {

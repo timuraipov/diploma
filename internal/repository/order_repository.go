@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/timuraipov/diploma/internal/domain"
@@ -18,19 +20,58 @@ func NewOrderRepository(db db.DB) *orderRepository {
 	}
 }
 func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
-	const stmt = `INSERT INTO "order" (number, status,accrual,user_id,uploaded_at) VALUES (@number, @status,@accrual,@userId, @uploadedAt) returning (id)`
+	const stmtCheck = `SELECT id, status, accrual, user_id, uploaded_at 
+	FROM "order" 
+	WHERE id = @orderId`
+	argsCheck := pgx.NamedArgs{
+		"orderId": order.ID,
+	}
+	const stmtExec = `INSERT INTO "order" 
+	(id, status, accrual, user_id, uploaded_at) 
+	VALUES (@id, @status, @accrual, @userId, @uploadedAt) 
+	RETURNING id`
+
 	args := pgx.NamedArgs{
-		"number":     order.Number,
+		"id":         order.ID,
 		"status":     order.Status,
 		"accrual":    order.Accrual,
 		"userId":     order.UserId,
 		"uploadedAt": order.UploadedAt,
 	}
-	err := o.database.Pool.QueryRow(ctx, stmt, args).Scan(&order.Number)
-	return err
+	tx, err := o.database.Pool.BeginTx(ctx, pgx.TxOptions{})
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			tx.Commit(ctx)
+		}
+	}()
+	if err != nil {
+		return err
+	}
+	row := tx.QueryRow(ctx, stmtCheck, argsCheck)
+	var orderFound domain.Order
+	err = row.Scan(&orderFound.ID, &orderFound.Status, &orderFound.Accrual, &orderFound.UserId, &orderFound.UploadedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = o.database.Pool.QueryRow(ctx, stmtExec, args).Scan(&order.ID)
+			if err != nil {
+				return err
+			}
+		}
+		return err
+	}
+	if orderFound.ID != "" && orderFound.ID == order.ID {
+		if orderFound.UserId == order.UserId {
+			return domain.OrderAlreadyInProcessing
+		}
+		return domain.OrderAlreadyProcessedByAnotherUser
+	}
+
+	return nil
 }
 func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Order, error) {
-	const stmt = `SELECT number, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userId`
+	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userId`
 	args := pgx.NamedArgs{
 		"userId": userId,
 	}
@@ -42,11 +83,24 @@ func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Or
 	var orders []domain.Order
 	for rows.Next() {
 		var order domain.Order
-		err = rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UserId, &order.UploadedAt)
+		err = rows.Scan(&order.ID, &order.Status, &order.Accrual, &order.UserId, &order.UploadedAt)
 		if err != nil {
 			return nil, err
 		}
 		orders = append(orders, order)
 	}
+	fmt.Println(orders)
 	return orders, nil
 }
+
+// if err != nil {
+// 	if pgErr, ok := err.(*pgconn.PgError); ok {
+// 		if pgErr.Code == pgerrcode.UniqueViolation {
+// 			return domain.OrderAlready
+// 		} else {
+// 			fmt.Printf("🎯 PgError: %s (Code: %s)\n", pgErr.Message, pgErr.Code)
+// 		}
+// 	} else {
+// 		fmt.Printf("❗ Не PgError: %T - %v\n", err, err)
+// 	}
+// }
