@@ -34,10 +34,15 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), "invalid data")
 	}
+	if string(orderId) == "" {
+		o.l.ErrorCtx(r.Context(), "orderId is empty")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	o.l.InfoCtx(r.Context(), "orderId", zap.Any("orderId", orderId))
 	order := domain.Order{
 		ID:         string(orderId),
-		Status:     domain.NEW,
+		Status:     domain.REGISTERED,
 		Accrual:    0,
 		UserId:     userId,
 		UploadedAt: time.Now(), //time.Now().Format(time.RFC3339),
@@ -65,16 +70,11 @@ func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	if len(orders) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(orders)
 }
-
-// func (o *OrderController) GetAll() ([]usecase.Order, error) {
-// 	orders, err := o.orderUseCase.GetAll(r.con
-// 	if err != nil {
-// 		o.l.ErrorCtx(o.cfg.ContextTimeout, "failed to get all orders", logging.Error(err))
-// 		return nil, err
-// 	}
-// 	return orders, nil
-// }

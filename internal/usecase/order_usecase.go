@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/timuraipov/diploma/internal/client"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/pkg/logging"
 )
@@ -11,10 +12,11 @@ import (
 type OrderUseCase struct {
 	l               *logging.ZapLogger
 	orderRepository domain.OrderRepository
+	accrualClient   client.AccrualClient
 	contextTimeout  time.Duration
 }
 
-func NewOrderUseCase(l *logging.ZapLogger, ur domain.OrderRepository, timeout time.Duration) domain.OrderUseCase {
+func NewOrderUseCase(l *logging.ZapLogger, ur domain.OrderRepository, client client.AccrualClient, timeout time.Duration) domain.OrderUseCase {
 	return &OrderUseCase{
 		l:               l,
 		orderRepository: ur,

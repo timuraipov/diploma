@@ -18,5 +18,6 @@ func Setup(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout time.Durati
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.JwtAuthMiddleware(cfg.AccessTokenSecret))
 		NewOrderRouter(logger, cfg, timeout, db, r)
+		NewBalanceRouter(logger, cfg, timeout, db, r)
 	})
 }
