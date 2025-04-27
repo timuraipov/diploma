@@ -92,6 +92,50 @@ func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Or
 	fmt.Println(orders)
 	return orders, nil
 }
+func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
+	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = 'NEW' or status = 'PROCESSING'`
+	rows, err := o.database.Pool.Query(ctx, stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var orders []domain.Order
+	for rows.Next() {
+		var order domain.Order
+		err = rows.Scan(&order.ID, &order.Status, &order.Accrual, &order.UserId, &order.UploadedAt)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+	fmt.Println(orders)
+	return orders, nil
+}
+func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
+	const stmt = `UPDATE "order" SET status = @status, accrual = @accrual WHERE id = @id`
+	args := pgx.NamedArgs{
+		"id":      order.ID,
+		"status":  order.Status,
+		"accrual": order.Accrual,
+	}
+	tx, err := o.database.Pool.BeginTx(ctx, pgx.TxOptions{})
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			tx.Commit(ctx)
+		}
+	}()
+	if err != nil {
+		return err
+	}
+	row := tx.QueryRow(ctx, stmt, args)
+	err = row.Scan()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // if err != nil {
 // 	if pgErr, ok := err.(*pgconn.PgError); ok {

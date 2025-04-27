@@ -28,10 +28,12 @@ func (ru *RegisterUsecase) Create(ctx context.Context, user *domain.User) error 
 	return ru.userRepository.Create(ctx, user)
 }
 func (ru *RegisterUsecase) GetByLogin(ctx context.Context, login string) (domain.User, error) {
-	return domain.User{}, nil
+	user, err := ru.userRepository.GetByLogin(ctx, login)
+	return user, err
 }
-func (ru *RegisterUsecase) GetByID(ctx context.Context, id string) (domain.User, error) {
-	return domain.User{}, nil
+func (ru *RegisterUsecase) GetByID(ctx context.Context, id int64) (domain.User, error) {
+	user, err := ru.userRepository.GetByID(ctx, id)
+	return user, err
 }
 func (ru *RegisterUsecase) CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
 	return tokenutil.CreateAccessToken(user, secret, expiry)

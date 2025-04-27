@@ -19,5 +19,4 @@ func NewBalanceRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout 
 	router.Get("/api/user/balance", balanceController.GetBalance)
 	router.Get("/api/user/withdrawals", balanceController.Withdrawals)
 	router.Post("/api/user/balance/withdraw", balanceController.Withdraw)
-
 }

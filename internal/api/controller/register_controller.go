@@ -31,7 +31,7 @@ func (rc *RegisterController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, err = rc.registerUsecase.GetByLogin(r.Context(), request.Login)
-	if err != nil {
+	if err == nil {
 		rc.l.ErrorCtx(r.Context(), "User already exists with the given login"+request.Login)
 		http.Error(w, jsonError("User already exists with the given login"), http.StatusConflict)
 		return
