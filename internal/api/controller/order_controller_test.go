@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/timuraipov/diploma/bootstrap"
+	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/internal/repository/mocks"
 	"github.com/timuraipov/diploma/internal/usecase"
 	"github.com/timuraipov/diploma/pkg/logging"
@@ -58,4 +60,56 @@ func TestOrderController_CreateOrder(t *testing.T) {
 	// Проверяем результат
 	assert.Equal(t, http.StatusAccepted, rec.Code)
 
+}
+
+func TestOrderController_GetOrders(t *testing.T) {
+	// Настройка окружения
+	orderController, cleanup := setupOrderTestEnvironment(t)
+	defer cleanup()
+	ctx := context.Background()
+	orders := []domain.Order{
+		{
+			ID:         "1",
+			Status:     domain.REGISTERED,
+			Accrual:    0,
+			UserId:     1,
+			UploadedAt: time.Now(),
+		},
+		{
+			ID:         "2",
+			Status:     domain.PROCESSING,
+			Accrual:    0,
+			UserId:     1,
+			UploadedAt: time.Now(),
+		},
+		{
+			ID:         "3",
+			Status:     domain.REGISTERED,
+			Accrual:    0,
+			UserId:     2,
+			UploadedAt: time.Now(),
+		},
+	}
+	for _, order := range orders {
+		err := orderController.orderUseCase.Save(ctx, order)
+		assert.NoError(t, err)
+	}
+	// Настройка mock-репозитория
+	body := []byte(string("orderID"))
+	req := httptest.NewRequest(http.MethodGet, "/orders", bytes.NewReader(body))
+	// Создаем тестовый HTTP-ответ
+	rec := httptest.NewRecorder()
+	ctx = req.Context()
+	ctx = context.WithValue(ctx, "x-user-id", int64(1))
+	req = req.WithContext(ctx)
+
+	// Вызываем метод контроллера
+	orderController.GetOrders(rec, req)
+	// Создание запроса
+	// Проверяем результат
+	assert.Equal(t, http.StatusOK, rec.Code)
+	var response []domain.Order
+	err := json.Unmarshal(rec.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(response))
 }
