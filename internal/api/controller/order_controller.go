@@ -34,6 +34,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), "invalid data")
 	}
+	o.l.InfoCtx(r.Context(), "token given", zap.Any("order---", orderId))
 	if string(orderId) == "" {
 		o.l.ErrorCtx(r.Context(), "orderId is empty")
 		w.WriteHeader(http.StatusBadRequest)

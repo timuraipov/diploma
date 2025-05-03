@@ -1,6 +1,13 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var (
+	UserAlreadyRegistered = errors.New("user already registered")
+)
 
 type RegisterRequest struct {
 	Login    string `json:"login"`
@@ -12,7 +19,7 @@ type RegisterResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 type RegisterUsecase interface {
-	Create(ctx context.Context, user *User) error
+	Create(ctx context.Context, user RegisterRequest) (User, error)
 	GetByLogin(ctx context.Context, login string) (User, error)
 	GetByID(ctx context.Context, id int64) (User, error)
 	CreateAccessToken(user *User, secret string, expiry int) (accessToken string, err error)

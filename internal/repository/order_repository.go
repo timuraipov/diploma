@@ -53,7 +53,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 	var orderFound domain.Order
 	err = row.Scan(&orderFound.ID, &orderFound.Status, &orderFound.Accrual, &orderFound.UserId, &orderFound.UploadedAt)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) { //TODO see adapter
 			err = o.database.Pool.QueryRow(ctx, stmtExec, args).Scan(&order.ID)
 			if err != nil {
 				return err
@@ -89,11 +89,10 @@ func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Or
 		}
 		orders = append(orders, order)
 	}
-	fmt.Println(orders)
 	return orders, nil
 }
 func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
-	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = 'NEW' or status = 'PROCESSING'`
+	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = 'REGISTERED' or status = 'PROCESSING'`
 	rows, err := o.database.Pool.Query(ctx, stmt)
 	if err != nil {
 		return nil, err
@@ -111,7 +110,7 @@ func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Orde
 	fmt.Println(orders)
 	return orders, nil
 }
-func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
+func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error { // check is already processed by another user
 	const stmt = `UPDATE "order" SET status = @status, accrual = @accrual WHERE id = @id`
 	args := pgx.NamedArgs{
 		"id":      order.ID,

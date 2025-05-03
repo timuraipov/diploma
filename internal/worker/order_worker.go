@@ -21,7 +21,7 @@ type OrderWorker struct {
 }
 
 func NewOrderWorker(l *logging.ZapLogger, orderRepository domain.OrderRepository, balanceRepository domain.BalanceRepository, client client.AccrualClient) *OrderWorker {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background()) // todo pass parent context
 	return &OrderWorker{
 		l:                 l,
 		orderRepository:   orderRepository,

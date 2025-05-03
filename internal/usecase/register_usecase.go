@@ -7,6 +7,7 @@ import (
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/internal/tokenutil"
 	"github.com/timuraipov/diploma/pkg/logging"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterUsecase struct {
@@ -22,10 +23,31 @@ func NewRegisterUsecase(logger *logging.ZapLogger, userRepository domain.UserRep
 		contextTimeout: timeout,
 	}
 }
-func (ru *RegisterUsecase) Create(ctx context.Context, user *domain.User) error {
-	ctx, cancel := context.WithTimeout(ctx, ru.contextTimeout)
-	defer cancel()
-	return ru.userRepository.Create(ctx, user)
+func (ru *RegisterUsecase) Create(ctx context.Context, userRequest domain.RegisterRequest) (domain.User, error) {
+	_, err := ru.GetByLogin(ctx, userRequest.Login)
+	if err == nil {
+		ru.l.ErrorCtx(ctx, "User already exists with the given login"+userRequest.Login)
+		return domain.User{}, domain.UserAlreadyRegistered
+	}
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(userRequest.Password), bcrypt.DefaultCost)
+	if err != nil {
+		ru.l.ErrorCtx(ctx, err.Error())
+
+		return domain.User{}, err
+	}
+	userRequest.Password = string(encryptedPassword)
+	user := domain.User{
+		Login:    userRequest.Login,
+		Password: userRequest.Password,
+	}
+	// ctx, cancel := context.WithTimeout(ctx, ru.contextTimeout)
+	// defer cancel()
+	err = ru.userRepository.Create(ctx, &user)
+	if err != nil {
+		ru.l.ErrorCtx(ctx, err.Error())
+		return domain.User{}, err
+	}
+	return user, nil
 }
 func (ru *RegisterUsecase) GetByLogin(ctx context.Context, login string) (domain.User, error) {
 	user, err := ru.userRepository.GetByLogin(ctx, login)

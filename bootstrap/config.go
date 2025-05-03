@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"flag"
+	"sync"
 
 	"github.com/caarlos0/env"
 )
@@ -17,14 +18,21 @@ type Config struct {
 	RefreshTokenSecret     string `env:"REFRESH_TOKEN_SECRET" envDefault:"secret"`
 }
 
-// -a-d-r
+var (
+	once sync.Once
+)
+
 func MustLoad() (*Config, error) {
 	cfg := &Config{}
-	flag.StringVar(&cfg.RunAddress, "a", "localhost:8080", "address and port to run server")
-	flag.StringVar(&cfg.DSN, "d", "postgres://postgres:postgres@localhost:5432/gophermart?sslmode=disable", "database dsn")
-	flag.StringVar(&cfg.AccrualAddress, "r", "", "accrual system address")
-	flag.Int64Var(&cfg.ContextTimeout, "t", 3, "time for timeout")
-	flag.Parse()
+
+	once.Do(func() {
+		flag.StringVar(&cfg.RunAddress, "a", "localhost:8080", "address and port to run server")
+		flag.StringVar(&cfg.DSN, "d", "postgres://postgres:postgres@localhost:5432/gophermart?sslmode=disable", "database dsn")
+		flag.StringVar(&cfg.AccrualAddress, "r", "", "accrual system address")
+		flag.Int64Var(&cfg.ContextTimeout, "t", 3, "time for timeout")
+		flag.Parse()
+	})
+
 	err := env.Parse(cfg)
 	return cfg, err
 }

@@ -14,9 +14,9 @@ type MockUserRepository struct {
 	db map[string]domain.User
 }
 
-func NewMockUserRepository() *MockUserRepository {
+func NewMockUserRepository() MockUserRepository {
 	db := make(map[string]domain.User)
-	return &MockUserRepository{db: db}
+	return MockUserRepository{db: db}
 }
 
 func (m *MockUserRepository) Create(ctx context.Context, user *domain.User) error {

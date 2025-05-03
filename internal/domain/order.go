@@ -16,6 +16,7 @@ const (
 var (
 	OrderAlreadyProcessedByAnotherUser = errors.New("Order with orderID already exists")
 	OrderAlreadyInProcessing           = errors.New("Order with orderID already  processed")
+	OrderNotFound                      = errors.New("Order with orderID not found")
 )
 
 type Order struct {

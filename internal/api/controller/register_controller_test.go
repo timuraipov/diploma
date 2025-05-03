@@ -20,18 +20,18 @@ import (
 	"go.uber.org/zap"
 )
 
-func setupTestRepository(t *testing.T) domain.UserRepository {
+func setupTestRegisterRepository(t *testing.T) domain.UserRepository {
 	userRepositoryMock := mocks.NewMockUserRepository()
-	return userRepositoryMock
+	return &userRepositoryMock
 }
-func setupTestEnvironment(t *testing.T) (*RegisterController, func()) {
+func setupTestRegisterEnvironment(t *testing.T) (*RegisterController, func()) {
 	logger, err := logging.NewZapLogger(zap.DebugLevel)
 	if err != nil {
 		t.Fatalf("failed to create logger: %v", err)
 	}
 	cfg, err := bootstrap.MustLoad()
 	// Настройка тестовой базы данных
-	userRepo := setupTestRepository(t)
+	userRepo := setupTestRegisterRepository(t)
 	timeout := time.Duration(3000) * time.Second
 	userUseCase := usecase.NewRegisterUsecase(logger, userRepo, timeout)
 	// Создание репозитория
@@ -44,7 +44,7 @@ func setupTestEnvironment(t *testing.T) (*RegisterController, func()) {
 
 func TestRegisterController_RegisterUser(t *testing.T) {
 	// Настройка окружения
-	registerController, cleanup := setupTestEnvironment(t)
+	registerController, cleanup := setupTestRegisterEnvironment(t)
 	defer cleanup()
 
 	// Создаем тестовый HTTP-запрос
