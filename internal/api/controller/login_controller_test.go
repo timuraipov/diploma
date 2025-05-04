@@ -51,7 +51,7 @@ func TestLoginController_LoginUser(t *testing.T) {
 	loginController, cleanup := setupLoginTestEnvironment(t)
 	defer cleanup()
 
-	// Создаем тестового пользователя
+	// Создаем тестового пользователя'''
 	mockUser := domain.User{
 		ID:       1,
 		Login:    "testuser",
