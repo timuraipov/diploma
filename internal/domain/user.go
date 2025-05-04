@@ -1,6 +1,11 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var UserNotFoundException = errors.New("user with such id not found")
 
 type User struct {
 	ID       int64  `json:"id"`

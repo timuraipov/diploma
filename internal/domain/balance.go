@@ -17,7 +17,7 @@ var (
 
 type Balance struct {
 	ID        int64     `json:"id" omitempty:"true"`
-	UserID    string    `json:"user_id"`
+	UserID    int64     `json:"user_id"`
 	Balance   float64   `json:"balance"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
