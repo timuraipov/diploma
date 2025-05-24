@@ -7,14 +7,17 @@ import (
 )
 
 // Client — структура API клиента
-type AccrualClient struct {
+type accrualClient struct {
 	baseURL string
 	resty   *resty.Client
 }
+type AccrualClient interface {
+	GetOrder(number string) (*OrderResponse, int, error)
+}
 
 // NewClient — конструктор нового клиента
-func NewClient(baseURL string) *AccrualClient {
-	return &AccrualClient{
+func NewClient(baseURL string) AccrualClient {
+	return &accrualClient{
 		baseURL: baseURL,
 		resty:   resty.New(),
 	}
@@ -27,7 +30,7 @@ type OrderResponse struct {
 }
 
 // GetOrder — делает GET запрос на /api/orders/{number}
-func (c *AccrualClient) GetOrder(number string) (*OrderResponse, int, error) {
+func (c *accrualClient) GetOrder(number string) (*OrderResponse, int, error) {
 	url := fmt.Sprintf("%s/api/orders/%s", c.baseURL, number)
 
 	resp, err := c.resty.R().

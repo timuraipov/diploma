@@ -18,7 +18,7 @@ func NewOrderRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout ti
 	br := repository.NewBalanceRepository(db)
 	balanceUseCase := usecase.NewBalanceUseCase(logger, br, timeout)
 	orderRepository := repository.NewOrderRepository(db)
-	orderUseCase := usecase.NewOrderUseCase(logger, orderRepository, *accrualClient, balanceUseCase, timeout)
+	orderUseCase := usecase.NewOrderUseCase(logger, orderRepository, accrualClient, balanceUseCase, timeout)
 	OrderController := controller.NewOrderController(logger, orderUseCase, cfg)
 	router.Get("/api/user/orders", OrderController.GetOrders)
 	router.Post("/api/user/orders", OrderController.Save)

@@ -16,7 +16,7 @@ func WorkerMustRun(l *logging.ZapLogger, db db.DB, cfg *Config, timeout time.Dur
 	br := repository.NewBalanceRepository(db)
 	balanceUseCase := usecase.NewBalanceUseCase(l, br, timeout)
 	orderRepository := repository.NewOrderRepository(db)
-	orderUseCase := usecase.NewOrderUseCase(l, orderRepository, *accrualClient, balanceUseCase, timeout)
+	orderUseCase := usecase.NewOrderUseCase(l, orderRepository, accrualClient, balanceUseCase, timeout)
 	worker := worker.NewOrderWorker(l, orderUseCase)
 	worker.Start()
 }

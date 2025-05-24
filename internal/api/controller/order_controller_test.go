@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/timuraipov/diploma/bootstrap"
+	client_mocks "github.com/timuraipov/diploma/internal/client/mocks"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/internal/repository/mocks"
 	"github.com/timuraipov/diploma/internal/usecase"
@@ -25,13 +26,15 @@ func setupOrderTestEnvironment(t *testing.T) (*OrderController, func()) {
 
 	cfg, err := bootstrap.MustLoad()
 	require.NoError(t, err)
-
+	timeout := time.Duration(3000) * time.Second
 	// Настройка mock-репозитория
 	orderRepo := mocks.NewMockOrderRepository()
-
+	balanceRepo := mocks.NewMockBalanceRepository()
+	balanceUseCase := usecase.NewBalanceUseCase(logger, &balanceRepo, timeout)
 	// Создание usecase
-	timeout := time.Duration(3000) * time.Second
-	orderUseCase := usecase.NewOrderUseCase(logger, &orderRepo, timeout)
+
+	client := client_mocks.NewMockClient(cfg.AccrualAddress)
+	orderUseCase := usecase.NewOrderUseCase(logger, &orderRepo, client, balanceUseCase, timeout)
 
 	// Создание контроллера
 	orderController := NewOrderController(logger, orderUseCase, cfg)
