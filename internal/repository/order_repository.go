@@ -26,49 +26,52 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 	argsCheck := pgx.NamedArgs{
 		"orderId": order.ID,
 	}
+
 	const stmtExec = `INSERT INTO "order" 
 	(id, status, accrual, user_id, uploaded_at) 
 	VALUES (@id, @status, @accrual, @userId, @uploadedAt) 
 	RETURNING id`
 
-	args := pgx.NamedArgs{
+	argsInsert := pgx.NamedArgs{
 		"id":         order.ID,
 		"status":     order.Status,
 		"accrual":    order.Accrual,
 		"userId":     order.UserId,
 		"uploadedAt": order.UploadedAt,
 	}
-	tx, err := o.database.Pool.BeginTx(ctx, pgx.TxOptions{})
-	defer func() {
-		if err != nil {
-			tx.Rollback(ctx)
-		} else {
-			tx.Commit(ctx)
-		}
-	}()
-	if err != nil {
-		return err
-	}
-	row := tx.QueryRow(ctx, stmtCheck, argsCheck)
-	var orderFound domain.Order
-	err = row.Scan(&orderFound.ID, &orderFound.Status, &orderFound.Accrual, &orderFound.UserId, &orderFound.UploadedAt)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) { //TODO see adapter
-			err = o.database.Pool.QueryRow(ctx, stmtExec, args).Scan(&order.ID)
-			if err != nil {
-				return err
-			}
-		}
-		return err
-	}
-	if orderFound.ID != "" && orderFound.ID == order.ID {
-		if orderFound.UserId == order.UserId {
-			return domain.OrderAlreadyInProcessing
-		}
-		return domain.OrderAlreadyProcessedByAnotherUser
-	}
 
-	return nil
+	return withTransaction(ctx, o.database.Pool, func(tx pgx.Tx) error {
+		var orderFound domain.Order
+		err := tx.QueryRow(ctx, stmtCheck, argsCheck).Scan(
+			&orderFound.ID,
+			&orderFound.Status,
+			&orderFound.Accrual,
+			&orderFound.UserId,
+			&orderFound.UploadedAt,
+		)
+
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				// Заказа нет, вставляем новый
+				err = tx.QueryRow(ctx, stmtExec, argsInsert).Scan(&order.ID)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+			return err // другая ошибка
+		}
+
+		// Заказ уже существует
+		if orderFound.ID == order.ID {
+			if orderFound.UserId == order.UserId {
+				return domain.OrderAlreadyInProcessing
+			}
+			return domain.OrderAlreadyProcessedByAnotherUser
+		}
+
+		return nil
+	})
 }
 func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Order, error) {
 	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userId`
@@ -110,31 +113,51 @@ func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Orde
 	fmt.Println(orders)
 	return orders, nil
 }
-func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error { // check is already processed by another user
+func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
 	const stmt = `UPDATE "order" SET status = @status, accrual = @accrual WHERE id = @id`
 	args := pgx.NamedArgs{
 		"id":      order.ID,
 		"status":  order.Status,
 		"accrual": order.Accrual,
 	}
-	tx, err := o.database.Pool.BeginTx(ctx, pgx.TxOptions{})
-	defer func() {
+
+	return withTransaction(ctx, o.database.Pool, func(tx pgx.Tx) error {
+		ct, err := tx.Exec(ctx, stmt, args)
 		if err != nil {
-			tx.Rollback(ctx)
-		} else {
-			tx.Commit(ctx)
+			return err
 		}
-	}()
-	if err != nil {
-		return err
-	}
-	row := tx.QueryRow(ctx, stmt, args)
-	err = row.Scan()
-	if err != nil {
-		return err
-	}
-	return nil
+		if ct.RowsAffected() == 0 {
+			return errors.New("no rows updated")
+		}
+		return nil
+	})
 }
+
+// func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error { // check is already processed by another user
+// 	const stmt = `UPDATE "order" SET status = @status, accrual = @accrual WHERE id = @id`
+// 	args := pgx.NamedArgs{
+// 		"id":      order.ID,
+// 		"status":  order.Status,
+// 		"accrual": order.Accrual,
+// 	}
+// 	tx, err := o.database.Pool.BeginTx(ctx, pgx.TxOptions{})
+// 	defer func() {
+// 		if err != nil {
+// 			tx.Rollback(ctx)
+// 		} else {
+// 			tx.Commit(ctx)
+// 		}
+// 	}()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	row := tx.QueryRow(ctx, stmt, args)
+// 	err = row.Scan()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 // if err != nil {
 // 	if pgErr, ok := err.(*pgconn.PgError); ok {
