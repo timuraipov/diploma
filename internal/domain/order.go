@@ -36,4 +36,6 @@ type OrderRepository interface {
 type OrderUseCase interface {
 	Save(ctx context.Context, order Order) error
 	GetAll(ctx context.Context, userId int64) ([]Order, error)
+	Accrual(ctx context.Context, order Order) (int, error)
+	GetUnhandledOrders(ctx context.Context) ([]Order, error)
 }

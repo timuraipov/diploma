@@ -2,7 +2,11 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -24,16 +28,42 @@ func main() {
 	}
 	timeout := time.Duration(app.Cfg.ContextTimeout) * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	// Listen for syscall signals for process to interrupt/quit
+
 	_ = cancel //TODO
 	db, err := db.NewDB(ctx, app.Cfg.DSN)
 	if err != nil {
 		panic(err)
 	}
+	go bootstrap.WorkerMustRun(l, *db, app.Cfg, timeout)
 	r := chi.NewRouter()
 	route.Setup(l, app.Cfg, timeout, *db, r)
-	l.InfoCtx(ctx, "Try to start server")
-	err = http.ListenAndServe(app.Cfg.RunAddress, r)
-	if err != nil {
-		l.PanicCtx(ctx, "failed to start server", zap.Error(err))
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	srv := &http.Server{
+		Addr:    app.Cfg.RunAddress, // app.Cfg.RunAddress
+		Handler: r,
 	}
+	go func() {
+		l.InfoCtx(ctx, "Try to start server")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			l.FatalCtx(ctx, "Server error: %s", zap.Error(err))
+		}
+	}()
+
+	<-stop
+	l.InfoCtx(ctx, "Shutting down server...")
+
+	// Контекст с таймаутом
+	defer cancel()
+
+	// Корректное завершение
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Graceful shutdown failed: %s", err)
+	}
+
+	l.InfoCtx(ctx, "Server gracefully stopped")
+	//err = http.ListenAndServe(app.Cfg.RunAddress, r)
+
 }
