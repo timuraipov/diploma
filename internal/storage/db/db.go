@@ -27,7 +27,6 @@ func NewDB(ctx context.Context, DSN string) (*DB, error) {
 
 func initPool(ctx context.Context, DSN string) (*pgxpool.Pool, error) {
 	poolCfg, err := pgxpool.ParseConfig(DSN)
-	fmt.Println(DSN)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse the DSN: %w", err)
 	}

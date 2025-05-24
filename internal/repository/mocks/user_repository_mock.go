@@ -3,7 +3,6 @@ package mocks
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/timuraipov/diploma/internal/domain"
@@ -21,12 +20,10 @@ func NewMockUserRepository() MockUserRepository {
 
 func (m *MockUserRepository) Create(ctx context.Context, user *domain.User) error {
 	m.db[user.Login] = *user
-	fmt.Println(m.db)
 	return nil
 }
 
 func (m *MockUserRepository) GetByLogin(ctx context.Context, login string) (domain.User, error) {
-	fmt.Println("from get by login", m.db)
 	if user, ok := m.db[login]; ok {
 		return user, nil
 	}

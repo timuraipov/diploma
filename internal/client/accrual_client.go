@@ -26,7 +26,7 @@ func NewClient(baseURL string) AccrualClient {
 type OrderResponse struct {
 	OrderNumber string  `json:"order"`
 	Status      string  `json:"status"`
-	Amount      float64 `json:"amount"`
+	Amount      float64 `json:"accrual"`
 }
 
 // GetOrder — делает GET запрос на /api/orders/{number}

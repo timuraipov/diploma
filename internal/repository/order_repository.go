@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/timuraipov/diploma/internal/domain"
@@ -110,7 +109,6 @@ func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Orde
 		}
 		orders = append(orders, order)
 	}
-	fmt.Println(orders)
 	return orders, nil
 }
 func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {

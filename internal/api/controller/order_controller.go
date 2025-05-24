@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -64,9 +63,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("into GetOrders")
 	userId := r.Context().Value("x-user-id").(int64)
-	fmt.Println("userid", userId)
 	o.l.InfoCtx(r.Context(), "userId", zap.Int64("userId", userId))
 	orders, err := o.orderUseCase.GetAll(r.Context(), userId)
 	if err != nil {

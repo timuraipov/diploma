@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/timuraipov/diploma/bootstrap"
@@ -32,7 +31,6 @@ func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, jsonError(err.Error()), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(request)
 
 	user, err := l.loginUsecase.GetUserByLogin(r.Context(), request.Login)
 	if err != nil {

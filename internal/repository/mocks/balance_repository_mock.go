@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/stretchr/testify/mock"
@@ -47,7 +46,6 @@ func (b *MockBalanceRepository) UpdateBalance(ctx context.Context, userID int64,
 	} else {
 		balanceObj.Balance += accrual
 	}
-	fmt.Print(b.balances)
 	return nil
 }
 func (b *MockBalanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdraw) error {

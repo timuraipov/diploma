@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -69,7 +68,6 @@ func TestRegisterController_RegisterUser(t *testing.T) {
 
 	// Проверяем, что пользователь был сохранен в базе данных
 	savedUser, err := registerController.registerUsecase.GetByLogin(context.Background(), user.Login)
-	fmt.Println(savedUser, err)
 	require.NoError(t, err)
 	assert.Equal(t, user.Login, savedUser.Login)
 }

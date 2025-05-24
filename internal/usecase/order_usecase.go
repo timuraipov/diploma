@@ -24,6 +24,7 @@ func NewOrderUseCase(l *logging.ZapLogger, ur domain.OrderRepository, client cli
 		l:               l,
 		orderRepository: ur,
 		client:          client,
+		balanceUseCase:  balanceUseCase,
 		contextTimeout:  timeout,
 	}
 }
@@ -39,7 +40,7 @@ func (o *OrderUseCase) GetAll(ctx context.Context, userId int64) ([]domain.Order
 }
 func (o *OrderUseCase) Accrual(ctx context.Context, order domain.Order) (int, error) {
 
-	o.l.InfoCtx(ctx, "Processing order", zap.Any("order", order))
+	o.l.InfoCtx(ctx, "Processing order", zap.Any("order-------", order))
 	result, statusCode, err := o.client.GetOrder(order.ID)
 	if err != nil {
 		o.l.ErrorCtx(ctx, "Error getting order from client- "+err.Error())
@@ -56,6 +57,7 @@ func (o *OrderUseCase) Accrual(ctx context.Context, order domain.Order) (int, er
 		}
 		o.l.InfoCtx(ctx, "Order updated successfully", zap.Any("order", order))
 		if order.Status == "PROCESSED" {
+			o.l.InfoCtx(ctx, "Order is processed, updating balance", zap.Any("userId", order.UserId), zap.Any("accrual", order.Accrual))
 			err := o.balanceUseCase.UpdateBalance(ctx, order.UserId, order.Accrual)
 			if err != nil {
 				o.l.ErrorCtx(ctx, "Error updating balance- "+err.Error())
@@ -69,6 +71,7 @@ func (o *OrderUseCase) Accrual(ctx context.Context, order domain.Order) (int, er
 
 func (o *OrderUseCase) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
 	orders, err := o.orderRepository.GetUnhandledOrders(ctx)
+	o.l.InfoCtx(ctx, "Getting unhandled orders", zap.Any("orders", orders))
 	if err != nil {
 		o.l.ErrorCtx(ctx, "Error getting unhandled orders- "+err.Error())
 		return nil, err
