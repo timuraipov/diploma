@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"context"
-	"errors"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/timuraipov/diploma/internal/domain"
@@ -29,7 +28,7 @@ func (m *MockUserRepository) GetByLogin(ctx context.Context, login string) (doma
 	}
 	// If user not found, return an error
 
-	return domain.User{}, errors.New("user not found")
+	return domain.User{}, domain.ErrUserNotFound
 }
 
 func (m *MockUserRepository) GetByID(ctx context.Context, id int64) (domain.User, error) {
@@ -38,5 +37,5 @@ func (m *MockUserRepository) GetByID(ctx context.Context, id int64) (domain.User
 			return user, nil
 		}
 	}
-	return domain.User{}, errors.New("user not found")
+	return domain.User{}, domain.ErrUserNotFound
 }

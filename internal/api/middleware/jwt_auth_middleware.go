@@ -8,6 +8,8 @@ import (
 	"github.com/timuraipov/diploma/internal/tokenutil"
 )
 
+var UserIDHeader = "x-user-id"
+
 func JwtAuthMiddleware(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +24,7 @@ func JwtAuthMiddleware(secret string) func(http.Handler) http.Handler {
 						http.Error(w, jsonError(err.Error()), http.StatusUnauthorized)
 						return
 					}
-					ctx := context.WithValue(r.Context(), "x-user-id", userID)
+					ctx := context.WithValue(r.Context(), UserIDHeader, userID)
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
 				}

@@ -64,9 +64,9 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 		// Заказ уже существует
 		if orderFound.ID == order.ID {
 			if orderFound.UserId == order.UserId {
-				return domain.OrderAlreadyInProcessing
+				return domain.ErrOrderAlreadyInProcessing
 			}
-			return domain.OrderAlreadyProcessedByAnotherUser
+			return domain.ErrOrderAlreadyProcessedByAnotherUser
 		}
 
 		return nil

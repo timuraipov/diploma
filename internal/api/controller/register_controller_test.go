@@ -29,11 +29,11 @@ func setupTestRegisterEnvironment(t *testing.T) (*RegisterController, func()) {
 		t.Fatalf("failed to create logger: %v", err)
 	}
 	cfg, err := bootstrap.MustLoad()
+	assert.NoError(t, err)
 	// Настройка тестовой базы данных
 	userRepo := setupTestRegisterRepository(t)
 	timeout := time.Duration(3000) * time.Second
 	userUseCase := usecase.NewRegisterUsecase(logger, userRepo, timeout)
-	// Создание репозитория
 
 	// Создание контроллера
 	registerController := NewRegisterController(logger, userUseCase, cfg)

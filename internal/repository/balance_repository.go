@@ -97,7 +97,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		var withdrawAlreadyExist string
 		err := tx.QueryRow(ctx, stmtWithdrawExist, withdrawExistsArgs).Scan(&withdrawAlreadyExist)
 		if err == nil {
-			return domain.WithdrawAlreadyUsedError
+			return domain.ErrWithdrawAlreadyUsed
 		}
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return err
@@ -114,7 +114,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 			return err
 		}
 		if errors.Is(err, pgx.ErrNoRows) || balance < withdraw.Sum {
-			return domain.InsufficientFundsError
+			return domain.ErrInsufficientFunds
 		}
 
 		// Списание средств

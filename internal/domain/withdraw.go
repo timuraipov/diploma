@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	WithdrawAlreadyUsedError = errors.New("order already used")
+	ErrWithdrawAlreadyUsed = errors.New("order already used")
 )
 
 type Withdraw struct {

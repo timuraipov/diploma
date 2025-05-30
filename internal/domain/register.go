@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	UserAlreadyRegistered = errors.New("user already registered")
+	ErrUserAlreadyRegistered = errors.New("user already registered")
 )
 
 type RegisterRequest struct {

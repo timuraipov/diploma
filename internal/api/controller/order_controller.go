@@ -29,7 +29,7 @@ func NewOrderController(l *logging.ZapLogger, orderUseCase domain.OrderUseCase, 
 }
 
 func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("x-user-id").(int64)
+	userId := r.Context().Value(domain.UserIDHeader).(int64)
 	orderId, err := io.ReadAll(bufio.NewReader(r.Body))
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), "invalid data")
@@ -52,18 +52,18 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	err = o.orderUseCase.Save(r.Context(), order)
 	o.l.InfoCtx(r.Context(), "trying to save order", zap.Any("order", order), zap.Error(err))
 	if err != nil {
-		if errors.Is(err, domain.OrderAlreadyInProcessing) {
+		if errors.Is(err, domain.ErrOrderAlreadyInProcessing) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if errors.Is(err, domain.OrderAlreadyProcessedByAnotherUser) {
+		if errors.Is(err, domain.ErrOrderAlreadyProcessedByAnotherUser) {
 			w.WriteHeader(http.StatusConflict)
 		}
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
 func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("x-user-id").(int64)
+	userId := r.Context().Value(domain.UserIDHeader).(int64)
 	o.l.InfoCtx(r.Context(), "userId", zap.Int64("userId", userId))
 	orders, err := o.orderUseCase.GetAll(r.Context(), userId)
 	if err != nil {

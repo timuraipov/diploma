@@ -54,7 +54,7 @@ func TestOrderController_CreateOrder(t *testing.T) {
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "x-user-id", int64(0))
+	ctx = context.WithValue(ctx, domain.UserIDHeader, int64(0))
 	req = req.WithContext(ctx)
 
 	// Вызываем метод контроллера
@@ -103,7 +103,7 @@ func TestOrderController_GetOrders(t *testing.T) {
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()
 	ctx = req.Context()
-	ctx = context.WithValue(ctx, "x-user-id", int64(1))
+	ctx = context.WithValue(ctx, domain.UserIDHeader, int64(1))
 	req = req.WithContext(ctx)
 
 	// Вызываем метод контроллера

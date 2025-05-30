@@ -26,7 +26,7 @@ func (b *MockBalanceRepository) GetBalance(ctx context.Context, userID int64) (d
 			return balance, nil
 		}
 	}
-	return domain.Balance{}, domain.UserNotFoundException
+	return domain.Balance{}, domain.ErrUserNotFound
 }
 
 func (b *MockBalanceRepository) UpdateBalance(ctx context.Context, userID int64, accrual float64) error {
@@ -51,11 +51,11 @@ func (b *MockBalanceRepository) UpdateBalance(ctx context.Context, userID int64,
 func (b *MockBalanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdraw) error {
 	_, ok := b.withdrawals[withdraw.ID]
 	if ok {
-		return domain.OrderAlreadyProcessedByAnotherUser
+		return domain.ErrOrderAlreadyProcessedByAnotherUser
 	}
 	balance, err := b.GetBalance(ctx, withdraw.UserId)
 	if err != nil || balance.Balance < withdraw.Sum {
-		return domain.InsufficientFundsError
+		return domain.ErrInsufficientFunds
 	}
 	b.withdrawals[withdraw.ID] = withdraw
 	balance.Balance -= withdraw.Sum

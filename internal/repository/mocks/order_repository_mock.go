@@ -20,9 +20,9 @@ func (o *MockOrderRepository) Save(ctx context.Context, order domain.Order) erro
 	orderFound, ok := o.db[order.ID]
 	if ok {
 		if orderFound.UserId == order.UserId {
-			return domain.OrderAlreadyInProcessing
+			return domain.ErrOrderAlreadyInProcessing
 		}
-		return domain.OrderAlreadyProcessedByAnotherUser
+		return domain.ErrOrderAlreadyProcessedByAnotherUser
 	}
 	o.db[order.ID] = order
 	return nil
@@ -52,8 +52,8 @@ func (o *MockOrderRepository) UpdateOrder(ctx context.Context, order domain.Orde
 			o.db[order.ID] = order
 			return nil
 		} else {
-			return domain.OrderAlreadyProcessedByAnotherUser
+			return domain.ErrOrderAlreadyProcessedByAnotherUser
 		}
 	}
-	return domain.OrderNotFound
+	return domain.ErrOrderNotFound
 }

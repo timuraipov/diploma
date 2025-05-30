@@ -76,8 +76,8 @@ func TestOrderRepository_SaveAndGetAll(t *testing.T) {
 	assert.WithinDuration(t, order.UploadedAt, savedOrder.UploadedAt, time.Second)
 
 	err = testRepositoryOrder.Save(context.Background(), order)
-	require.ErrorIs(t, err, domain.OrderAlreadyInProcessing)
+	require.ErrorIs(t, err, domain.ErrOrderAlreadyInProcessing)
 	order.UserId = 0
 	err = testRepositoryOrder.Save(context.Background(), order)
-	require.ErrorIs(t, err, domain.OrderAlreadyProcessedByAnotherUser)
+	require.ErrorIs(t, err, domain.ErrOrderAlreadyProcessedByAnotherUser)
 }

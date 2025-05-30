@@ -25,7 +25,7 @@ func NewBalanceController(logger *logging.ZapLogger, br domain.BalanceUseCase, c
 	}
 }
 func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("x-user-id").(int64)
+	userId := r.Context().Value(domain.UserIDHeader).(int64)
 	balance, err := b.balanceUseCase.GetBalance(r.Context(), userId)
 	if err != nil {
 		b.l.ErrorCtx(r.Context(), err.Error())
@@ -38,7 +38,7 @@ func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("x-user-id").(int64)
+	userId := r.Context().Value(domain.UserIDHeader).(int64)
 	var request domain.WithdrawRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -54,11 +54,11 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 	}
 	err = b.balanceUseCase.Withdraw(r.Context(), withdraw)
 	if err != nil {
-		if errors.Is(err, domain.InsufficientFundsError) {
+		if errors.Is(err, domain.ErrInsufficientFunds) {
 			w.WriteHeader(http.StatusPaymentRequired)
 			return
 		}
-		if errors.Is(err, domain.WithdrawAlreadyUsedError) {
+		if errors.Is(err, domain.ErrWithdrawAlreadyUsed) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		} //TODO add error handle
@@ -67,11 +67,10 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	return
 }
 
 func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("x-user-id").(int64)
+	userId := r.Context().Value(domain.UserIDHeader).(int64)
 	withdrawals, err := b.balanceUseCase.Withdrawals(r.Context(), userId)
 
 	if err != nil {

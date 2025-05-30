@@ -34,5 +34,8 @@ func MustLoad() (*Config, error) {
 	})
 
 	err := env.Parse(cfg)
+	if err != nil {
+		panic(`env file parse error: ` + err.Error())
+	}
 	return cfg, err
 }

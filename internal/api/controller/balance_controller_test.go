@@ -49,7 +49,7 @@ func TestBalanceController_GetBalance(t *testing.T) {
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "x-user-id", int64(1))
+	ctx = context.WithValue(ctx, domain.UserIDHeader, int64(1))
 	req = req.WithContext(ctx)
 
 	// Вызываем метод контроллера
@@ -79,7 +79,7 @@ func TestBalanceController_Withdraw(t *testing.T) {
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "x-user-id", int64(1))
+	ctx = context.WithValue(ctx, domain.UserIDHeader, int64(1))
 	req = req.WithContext(ctx)
 
 	// Вызываем метод контроллера
@@ -116,7 +116,7 @@ func TestBalanceController_Withdrawals(t *testing.T) {
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "x-user-id", int64(1))
+	ctx = context.WithValue(ctx, domain.UserIDHeader, int64(1))
 	req = req.WithContext(ctx)
 
 	// Вызываем метод контроллера

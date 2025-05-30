@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-var UserNotFoundException = errors.New("user with such id not found")
+var ErrUserNotFound = errors.New("user with such id not found")
 
 type User struct {
 	ID       int64  `json:"id"`

@@ -27,7 +27,7 @@ func (ru *RegisterUsecase) Create(ctx context.Context, userRequest domain.Regist
 	_, err := ru.GetByLogin(ctx, userRequest.Login)
 	if err == nil {
 		ru.l.ErrorCtx(ctx, "User already exists with the given login"+userRequest.Login)
-		return domain.User{}, domain.UserAlreadyRegistered
+		return domain.User{}, domain.ErrUserAlreadyRegistered
 	}
 	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(userRequest.Password), bcrypt.DefaultCost)
 	if err != nil {

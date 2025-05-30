@@ -30,12 +30,11 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	// Listen for syscall signals for process to interrupt/quit
 
-	_ = cancel //TODO
 	db, err := db.NewDB(ctx, app.Cfg.DSN)
 	if err != nil {
 		panic(err)
 	}
-	go bootstrap.WorkerMustRun(l, *db, app.Cfg, timeout)
+	go bootstrap.RunWorker(l, *db, app.Cfg, timeout)
 	r := chi.NewRouter()
 	route.Setup(l, app.Cfg, timeout, *db, r)
 

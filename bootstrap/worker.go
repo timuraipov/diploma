@@ -11,7 +11,7 @@ import (
 	"github.com/timuraipov/diploma/pkg/logging"
 )
 
-func WorkerMustRun(l *logging.ZapLogger, db db.DB, cfg *Config, timeout time.Duration) {
+func RunWorker(l *logging.ZapLogger, db db.DB, cfg *Config, timeout time.Duration) {
 	accrualClient := client.NewClient(cfg.AccrualAddress)
 	br := repository.NewBalanceRepository(db)
 	balanceUseCase := usecase.NewBalanceUseCase(l, br, timeout)

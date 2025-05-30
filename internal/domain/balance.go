@@ -12,7 +12,7 @@ type BalanceResponse struct {
 }
 
 var (
-	InsufficientFundsError = errors.New("insufficient funds for this operation")
+	ErrInsufficientFunds = errors.New("insufficient funds for this operation ")
 )
 
 type Balance struct {
