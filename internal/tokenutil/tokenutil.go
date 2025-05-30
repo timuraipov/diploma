@@ -2,6 +2,7 @@ package tokenutil
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -9,14 +10,20 @@ import (
 )
 
 func CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
-	exp := time.Now().Add(time.Hour * time.Duration(expiry)).Unix()
-	claims := &domain.JwtCustomClaims{
-		Name: user.Login,
-		ID:   user.ID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: exp,
-		},
+	exp := time.Now().Add(time.Hour * time.Duration(expiry))
+	// claims := &domain.JwtCustomClaims{
+	// 	Name: user.Login,
+	// 	ID:   user.ID,
+	// 	RegisteredClaims: jwt.StandardClaims{
+	// 		ExpiresAt: exp,
+	// 	},
+	// }
+	claims := &jwt.RegisteredClaims{
+		Subject:   user.Login,
+		ExpiresAt: &jwt.NumericDate{Time: exp},
+		ID:        fmt.Sprintf("%d", user.ID),
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString([]byte(secret))
 	if err != nil {
@@ -26,11 +33,10 @@ func CreateAccessToken(user *domain.User, secret string, expiry int) (accessToke
 }
 
 func CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshToken string, err error) {
-	claimsRefresh := &domain.JwtCustomRefreshClaims{
-		ID: user.ID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * time.Duration(expiry)).Unix(),
-		},
+	exp := time.Now().Add(time.Hour * time.Duration(expiry))
+	claimsRefresh := &jwt.RegisteredClaims{
+		ID:        fmt.Sprintf("%d", user.ID),
+		ExpiresAt: &jwt.NumericDate{Time: exp},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claimsRefresh)
 	rt, err := token.SignedString([]byte(secret))
@@ -43,7 +49,7 @@ func CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshTo
 func IsAuthorized(requestToken string, secret string) (bool, error) {
 	_, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(secret), nil
 	})
@@ -56,7 +62,7 @@ func IsAuthorized(requestToken string, secret string) (bool, error) {
 func ExtractIDFromToken(requestToken string, secret string) (int64, error) {
 	token, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(secret), nil
 	})
@@ -68,8 +74,15 @@ func ExtractIDFromToken(requestToken string, secret string) (int64, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok && !token.Valid {
-		return 0, fmt.Errorf("Invalid Token")
+		return 0, fmt.Errorf("invalid Token")
 	}
-	//id, err := strconv.ParseInt(, 10, 64)
-	return int64(claims["id"].(float64)), nil
+	jti, ok := claims["jti"].(string)
+	if !ok {
+		return 0, fmt.Errorf("jti claim is not a string")
+	}
+	id, err := strconv.ParseInt(jti, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse jti claim: %v", err)
+	}
+	return id, nil
 }

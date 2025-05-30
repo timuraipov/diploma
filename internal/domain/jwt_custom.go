@@ -9,7 +9,7 @@ var UserIDHeader = "x-user-id"
 type JwtCustomClaims struct {
 	Name string `json:"name"`
 	ID   int64  `json:"id"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 type JwtCustomRefreshClaims struct {
