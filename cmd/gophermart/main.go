@@ -37,7 +37,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go bootstrap.RunWorker(l, *db, app.Cfg, timeout)
+	//go bootstrap.RunWorker(l, *db, app.Cfg, timeout)
 	r := chi.NewRouter()
 	route.Setup(l, app.Cfg, timeout, *db, r)
 
