@@ -53,7 +53,7 @@ func TestOrderRepository_SaveAndGetAll(t *testing.T) {
 	// Создаем тестовый заказ
 	order := domain.Order{
 		ID:         "test-order-id",
-		Status:     "new",
+		Status:     "NEW",
 		Accrual:    100,
 		UserId:     1,
 		UploadedAt: time.Now(),
