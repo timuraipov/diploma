@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"unicode"
 
 	"github.com/timuraipov/diploma/internal/client"
 	"github.com/timuraipov/diploma/internal/domain"
@@ -31,11 +32,12 @@ func NewOrderUseCase(l *logging.ZapLogger, ur domain.OrderRepository, client cli
 }
 
 func (o *OrderUseCase) Save(ctx context.Context, order domain.Order) error {
-	_, err := o.luhnCheckDigit(order.ID)
-	if err != nil {
+	ok := o.luhnCheck(order.ID)
+	o.l.InfoCtx(ctx, "Checking order ID", zap.Any("orderID", order.ID), zap.Bool("isOk", ok))
+	if !ok {
 		return domain.ErrIncorrectOrderIDFormat
 	}
-	err = o.orderRepository.Save(ctx, order)
+	err := o.orderRepository.Save(ctx, order)
 
 	return err
 }
@@ -83,35 +85,27 @@ func (o *OrderUseCase) GetUnhandledOrders(ctx context.Context) ([]domain.Order, 
 	}
 	return orders, nil
 }
-func (o *OrderUseCase) luhnCheckDigit(s string) (int, error) {
-	number, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, err
-	}
+func (o *OrderUseCase) luhnCheck(number string) bool {
+	var sum int
+	alt := false
 
-	checkNumber := o.luhnChecksum(number)
+	// Обрабатываем цифры справа налево
+	for i := len(number) - 1; i >= 0; i-- {
+		r := rune(number[i])
+		if !unicode.IsDigit(r) {
+			return false // если в строке есть нецифры
+		}
+		n, _ := strconv.Atoi(string(r))
 
-	if checkNumber == 0 {
-		return 0, nil
-	}
-	return 10 - checkNumber, nil
-}
-
-func (o *OrderUseCase) luhnChecksum(number int) int {
-	var luhn int
-
-	for i := 0; number > 0; i++ {
-		cur := number % 10
-
-		if i%2 == 0 { // even
-			cur = cur * 2
-			if cur > 9 {
-				cur = cur%10 + cur/10
+		if alt {
+			n *= 2
+			if n > 9 {
+				n -= 9
 			}
 		}
-
-		luhn += cur
-		number = number / 10
+		sum += n
+		alt = !alt
 	}
-	return luhn % 10
+
+	return sum%10 == 0
 }

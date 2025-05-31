@@ -37,7 +37,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	o.l.InfoCtx(r.Context(), "token given", zap.Any("order---", orderId))
 	if string(orderId) == "" {
 		o.l.ErrorCtx(r.Context(), "orderId is empty")
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 	o.l.InfoCtx(r.Context(), "orderId", zap.Any("orderId", orderId))
@@ -58,6 +58,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, domain.ErrOrderAlreadyProcessedByAnotherUser) {
 			w.WriteHeader(http.StatusConflict)
+			return
 		}
 		if errors.Is(err, domain.ErrIncorrectOrderIDFormat) {
 			o.l.ErrorCtx(r.Context(), "incorrect orderID format")
