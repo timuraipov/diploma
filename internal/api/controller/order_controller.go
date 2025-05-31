@@ -72,6 +72,7 @@ func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(domain.UserIDHeader).(int64)
 	o.l.InfoCtx(r.Context(), "userID", zap.Int64("userID", userID))
 	orders, err := o.orderUseCase.GetAll(r.Context(), userID)
+	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -81,7 +82,6 @@ func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(orders)
 	if err != nil {
