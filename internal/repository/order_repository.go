@@ -74,7 +74,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 	})
 }
 func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
-	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @D`
+	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userID`
 	args := pgx.NamedArgs{
 		"userID": userID,
 	}
