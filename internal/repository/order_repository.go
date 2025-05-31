@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/timuraipov/diploma/internal/domain"
@@ -94,7 +95,8 @@ func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Or
 	return orders, nil
 }
 func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
-	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = 'REGISTERED' or status = 'PROCESSING'`
+	// const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = 'REGISTERED' or status = 'PROCESSING'`
+	var stmt = fmt.Sprintf(`SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = %s  or status = %s`, domain.REGISTERED, domain.PROCESSING)
 	rows, err := o.database.Pool.Query(ctx, stmt)
 	if err != nil {
 		return nil, err

@@ -49,7 +49,7 @@ func TestOrderController_CreateOrder(t *testing.T) {
 	orderController, cleanup := setupOrderTestEnvironment(t)
 	defer cleanup()
 	// Настройка mock-репозитория
-	body := []byte(string("orderID"))
+	body := []byte(string("39476215825"))
 	req := httptest.NewRequest(http.MethodPost, "/orders", bytes.NewReader(body))
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()
@@ -72,21 +72,21 @@ func TestOrderController_GetOrders(t *testing.T) {
 	ctx := context.Background()
 	orders := []domain.Order{
 		{
-			ID:         "1",
+			ID:         "60412987384",
 			Status:     domain.REGISTERED,
 			Accrual:    0,
 			UserId:     1,
 			UploadedAt: time.Now(),
 		},
 		{
-			ID:         "2",
+			ID:         "6011000990139424",
 			Status:     domain.PROCESSING,
 			Accrual:    0,
 			UserId:     1,
 			UploadedAt: time.Now(),
 		},
 		{
-			ID:         "3",
+			ID:         "79927398713",
 			Status:     domain.REGISTERED,
 			Accrual:    0,
 			UserId:     2,
@@ -98,7 +98,7 @@ func TestOrderController_GetOrders(t *testing.T) {
 		assert.NoError(t, err)
 	}
 	// Настройка mock-репозитория
-	body := []byte(string("orderID"))
+	body := []byte(string("39476215825"))
 	req := httptest.NewRequest(http.MethodGet, "/orders", bytes.NewReader(body))
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()

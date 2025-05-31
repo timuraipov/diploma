@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	REGISTERED string = "REGISTERED"
+	REGISTERED string = "NEW"
 	PROCESSING        = "PROCESSING"
 	INVALID           = "INVALID"
 	PROCESSED         = "PROCESSED"
