@@ -17,6 +17,7 @@ var (
 	ErrOrderAlreadyProcessedByAnotherUser = errors.New("order with orderID already exists")
 	ErrOrderAlreadyInProcessing           = errors.New("order with orderID already  processed")
 	ErrOrderNotFound                      = errors.New("order with orderID not found")
+	ErrIncorrectOrderIDFormat             = errors.New("incorrect orderID format, should be 16 digits")
 )
 
 type Order struct {

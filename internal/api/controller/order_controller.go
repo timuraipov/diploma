@@ -59,6 +59,11 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, domain.ErrOrderAlreadyProcessedByAnotherUser) {
 			w.WriteHeader(http.StatusConflict)
 		}
+		if errors.Is(err, domain.ErrIncorrectOrderIDFormat) {
+			o.l.ErrorCtx(r.Context(), "incorrect orderID format")
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return
+		}
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
