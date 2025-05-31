@@ -25,8 +25,8 @@ func NewBalanceController(logger *logging.ZapLogger, br domain.BalanceUseCase, c
 	}
 }
 func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(domain.UserIDHeader).(int64)
-	balance, err := b.balanceUseCase.GetBalance(r.Context(), userId)
+	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	balance, err := b.balanceUseCase.GetBalance(r.Context(), userID)
 	if err != nil {
 		b.l.ErrorCtx(r.Context(), err.Error())
 		w.WriteHeader(http.StatusBadGateway)
@@ -43,7 +43,7 @@ func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(domain.UserIDHeader).(int64)
+	userID := r.Context().Value(domain.UserIDHeader).(int64)
 	var request domain.WithdrawRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -54,7 +54,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 	withdraw := domain.Withdraw{
 		ID:          request.Order,
 		Sum:         request.Sum,
-		UserID:      userId,
+		UserID:      userID,
 		ProcessedAt: time.Now(), //time.Now().Format(time.RFC3339),
 	}
 	err = b.balanceUseCase.Withdraw(r.Context(), withdraw)
@@ -75,8 +75,8 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(domain.UserIDHeader).(int64)
-	withdrawals, err := b.balanceUseCase.Withdrawals(r.Context(), userId)
+	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	withdrawals, err := b.balanceUseCase.Withdrawals(r.Context(), userID)
 
 	if err != nil {
 		b.l.InfoCtx(r.Context(), err.Error())

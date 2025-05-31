@@ -29,14 +29,14 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 
 	const stmtExec = `INSERT INTO "order" 
 	(id, status, accrual, user_id, uploaded_at) 
-	VALUES (@id, @status, @accrual, @userId, @uploadedAt) 
+	VALUES (@id, @status, @accrual, @userID, @uploadedAt) 
 	RETURNING id`
 
 	argsInsert := pgx.NamedArgs{
 		"id":         order.ID,
 		"status":     order.Status,
 		"accrual":    order.Accrual,
-		"userId":     order.UserID,
+		"userID":     order.UserID,
 		"uploadedAt": order.UploadedAt,
 	}
 
@@ -74,9 +74,9 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 	})
 }
 func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
-	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userId`
+	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @D`
 	args := pgx.NamedArgs{
-		"userId": userID,
+		"userID": userID,
 	}
 	rows, err := o.database.Pool.Query(ctx, stmt, args)
 	if err != nil {

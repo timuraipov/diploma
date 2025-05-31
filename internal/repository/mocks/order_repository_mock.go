@@ -27,10 +27,10 @@ func (o *MockOrderRepository) Save(ctx context.Context, order domain.Order) erro
 	o.db[order.ID] = order
 	return nil
 }
-func (o *MockOrderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Order, error) {
+func (o *MockOrderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
 	orders := make([]domain.Order, 0)
 	for _, order := range o.db {
-		if order.UserID == userId {
+		if order.UserID == userID {
 			orders = append(orders, order)
 		}
 	}

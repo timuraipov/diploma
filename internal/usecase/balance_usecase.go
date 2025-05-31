@@ -28,12 +28,12 @@ func (b *balanceUseCase) UpdateBalance(ctx context.Context, userID int64, amount
 	return err
 }
 
-func (b *balanceUseCase) GetBalance(ctx context.Context, userId int64) (domain.BalanceResponse, error) {
-	balance, err := b.balanceRepository.GetBalance(ctx, userId)
+func (b *balanceUseCase) GetBalance(ctx context.Context, userID int64) (domain.BalanceResponse, error) {
+	balance, err := b.balanceRepository.GetBalance(ctx, userID)
 	if err != nil {
 		return domain.BalanceResponse{}, err
 	}
-	withdrawals, err := b.balanceRepository.Withdrawals(ctx, userId)
+	withdrawals, err := b.balanceRepository.Withdrawals(ctx, userID)
 	if err != nil {
 		return domain.BalanceResponse{}, err
 	}

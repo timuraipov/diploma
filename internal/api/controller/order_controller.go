@@ -29,23 +29,23 @@ func NewOrderController(l *logging.ZapLogger, orderUseCase domain.OrderUseCase, 
 }
 
 func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(domain.UserIDHeader).(int64)
-	orderId, err := io.ReadAll(bufio.NewReader(r.Body))
+	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	orderID, err := io.ReadAll(bufio.NewReader(r.Body))
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), "invalid data")
 	}
-	o.l.InfoCtx(r.Context(), "token given", zap.Any("order---", orderId))
-	if string(orderId) == "" {
+	o.l.InfoCtx(r.Context(), "token given", zap.Any("order---", orderID))
+	if string(orderID) == "" {
 		o.l.ErrorCtx(r.Context(), "orderId is empty")
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
-	o.l.InfoCtx(r.Context(), "orderId", zap.Any("orderId", orderId))
+	o.l.InfoCtx(r.Context(), "orderId", zap.Any("orderId", orderID))
 	order := domain.Order{
-		ID:         string(orderId),
+		ID:         string(orderID),
 		Status:     domain.REGISTERED,
 		Accrual:    0,
-		UserID:     userId,
+		UserID:     userID,
 		UploadedAt: time.Now(), //time.Now().Format(time.RFC3339),
 	}
 
@@ -69,9 +69,9 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(domain.UserIDHeader).(int64)
-	o.l.InfoCtx(r.Context(), "userId", zap.Int64("userId", userId))
-	orders, err := o.orderUseCase.GetAll(r.Context(), userId)
+	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	o.l.InfoCtx(r.Context(), "userID", zap.Int64("userID", userID))
+	orders, err := o.orderUseCase.GetAll(r.Context(), userID)
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

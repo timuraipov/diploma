@@ -41,8 +41,8 @@ func (o *OrderUseCase) Save(ctx context.Context, order domain.Order) error {
 
 	return err
 }
-func (o *OrderUseCase) GetAll(ctx context.Context, userId int64) ([]domain.Order, error) {
-	orders, err := o.orderRepository.GetAll(ctx, userId)
+func (o *OrderUseCase) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
+	orders, err := o.orderRepository.GetAll(ctx, userID)
 	return orders, err
 }
 func (o *OrderUseCase) Accrual(ctx context.Context, order domain.Order) (int, error) {
@@ -64,13 +64,13 @@ func (o *OrderUseCase) Accrual(ctx context.Context, order domain.Order) (int, er
 		}
 		o.l.InfoCtx(ctx, "Order updated successfully", zap.Any("order", order))
 		if order.Status == "PROCESSED" {
-			o.l.InfoCtx(ctx, "Order is processed, updating balance", zap.Any("userId", order.UserID), zap.Any("accrual", order.Accrual))
+			o.l.InfoCtx(ctx, "Order is processed, updating balance", zap.Any("userID", order.UserID), zap.Any("accrual", order.Accrual))
 			err := o.balanceUseCase.UpdateBalance(ctx, order.UserID, order.Accrual)
 			if err != nil {
 				o.l.ErrorCtx(ctx, "Error updating balance- "+err.Error())
 				return statusCode, err
 			}
-			o.l.InfoCtx(ctx, "Balance updated successfully", zap.Any("userId", order.UserID), zap.Any("accrual", order.Accrual))
+			o.l.InfoCtx(ctx, "Balance updated successfully", zap.Any("userID", order.UserID), zap.Any("accrual", order.Accrual))
 		}
 	}
 	return statusCode, err
