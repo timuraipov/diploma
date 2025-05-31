@@ -26,6 +26,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	if err := db.RunMigrations(app.Cfg.DSN); err != nil {
+		panic(err)
+	}
 	timeout := time.Duration(app.Cfg.ContextTimeout) * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	// Listen for syscall signals for process to interrupt/quit

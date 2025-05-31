@@ -8,7 +8,7 @@ import (
 	"github.com/timuraipov/diploma/internal/tokenutil"
 )
 
-var UserIDHeader = "x-user-id"
+var UserIDHeader = "x-user-id" // TODO refactor
 
 func JwtAuthMiddleware(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
