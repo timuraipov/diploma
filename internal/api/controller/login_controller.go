@@ -61,6 +61,7 @@ func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Authorization", "x-user-id "+accessToken)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(loginResponse)
 }
