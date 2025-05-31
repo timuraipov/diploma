@@ -60,8 +60,8 @@ func TestLoginController_LoginUser(t *testing.T) {
 
 	// Настраиваем mock-репозиторий
 	mockRepo := mocks.NewMockUserRepository()
-	mockRepo.Create(context.Background(), &mockUser)
-
+	err := mockRepo.Create(context.Background(), &mockUser)
+	assert.NoError(t, err)
 	//создаем регистрацию
 
 	// Создаем тестовый HTTP-запрос

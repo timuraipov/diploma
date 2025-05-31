@@ -5,9 +5,9 @@ import (
 )
 
 type Client struct {
-	Db *sql.DB
+	DB *sql.DB
 }
 
 func NewClient() *Client {
-	return &Client{Db: &sql.DB{}}
+	return &Client{DB: &sql.DB{}}
 }

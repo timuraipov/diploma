@@ -32,9 +32,14 @@ func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadGateway)
 		return // TODO add different statuses
 	}
+
 	w.Header().Set("Content-Type", "application/json")
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(balance) //todo encode Handle
+	err = json.NewEncoder(w).Encode(balance) //todo encode Handle
+	if err != nil {
+		b.l.ErrorCtx(r.Context(), err.Error())
+	}
 }
 
 func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +54,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 	withdraw := domain.Withdraw{
 		ID:          request.Order,
 		Sum:         request.Sum,
-		UserId:      userId,
+		UserID:      userId,
 		ProcessedAt: time.Now(), //time.Now().Format(time.RFC3339),
 	}
 	err = b.balanceUseCase.Withdraw(r.Context(), withdraw)
@@ -85,7 +90,10 @@ func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(withdrawals)
+	err = json.NewEncoder(w).Encode(withdrawals)
+	if err != nil {
+		b.l.ErrorCtx(r.Context(), err.Error())
+	}
 }
 
 // func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {

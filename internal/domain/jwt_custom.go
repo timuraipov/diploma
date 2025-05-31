@@ -4,7 +4,9 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var UserIDHeader = "x-user-id"
+type contextKey string
+
+const UserIDHeader contextKey = "x-user-id"
 
 type JwtCustomClaims struct {
 	Name string `json:"name"`

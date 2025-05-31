@@ -19,7 +19,7 @@ func NewMockOrderRepository() MockOrderRepository {
 func (o *MockOrderRepository) Save(ctx context.Context, order domain.Order) error {
 	orderFound, ok := o.db[order.ID]
 	if ok {
-		if orderFound.UserId == order.UserId {
+		if orderFound.UserID == order.UserID {
 			return domain.ErrOrderAlreadyInProcessing
 		}
 		return domain.ErrOrderAlreadyProcessedByAnotherUser
@@ -30,7 +30,7 @@ func (o *MockOrderRepository) Save(ctx context.Context, order domain.Order) erro
 func (o *MockOrderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Order, error) {
 	orders := make([]domain.Order, 0)
 	for _, order := range o.db {
-		if order.UserId == userId {
+		if order.UserID == userId {
 			orders = append(orders, order)
 		}
 	}
@@ -48,7 +48,7 @@ func (o *MockOrderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.
 func (o *MockOrderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
 	orderFound, ok := o.db[order.ID]
 	if ok {
-		if orderFound.UserId == order.UserId {
+		if orderFound.UserID == order.UserID {
 			o.db[order.ID] = order
 			return nil
 		} else {

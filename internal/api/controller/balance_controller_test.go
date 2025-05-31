@@ -44,7 +44,8 @@ func setupBalanceTestEnvironment(t *testing.T) (*BalanceController, func()) {
 func TestBalanceController_GetBalance(t *testing.T) {
 	balanceController, cleanup := setupBalanceTestEnvironment(t)
 	defer cleanup()
-	balanceController.balanceUseCase.UpdateBalance(context.Background(), int64(1), 100.1)
+	err := balanceController.balanceUseCase.UpdateBalance(context.Background(), int64(1), 100.1)
+	assert.NoError(t, err)
 	req := httptest.NewRequest(http.MethodGet, "/balance", bytes.NewReader([]byte("")))
 	// Создаем тестовый HTTP-ответ
 	rec := httptest.NewRecorder()
@@ -58,7 +59,7 @@ func TestBalanceController_GetBalance(t *testing.T) {
 	// Проверяем результат
 	assert.Equal(t, http.StatusOK, rec.Code)
 	var response domain.BalanceResponse
-	err := json.Unmarshal(rec.Body.Bytes(), &response)
+	err = json.Unmarshal(rec.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 100.1, response.Current)
 	//todo add negative cases
@@ -67,7 +68,8 @@ func TestBalanceController_GetBalance(t *testing.T) {
 func TestBalanceController_Withdraw(t *testing.T) {
 	balanceController, cleanup := setupBalanceTestEnvironment(t)
 	defer cleanup()
-	balanceController.balanceUseCase.UpdateBalance(context.Background(), int64(1), 101)
+	err := balanceController.balanceUseCase.UpdateBalance(context.Background(), int64(1), 101)
+	assert.NoError(t, err)
 	withdrawRequest := domain.WithdrawRequest{
 		Order: "neworder",
 		Sum:   100.12,
@@ -92,24 +94,26 @@ func TestBalanceController_Withdraw(t *testing.T) {
 func TestBalanceController_Withdrawals(t *testing.T) {
 	balanceController, cleanup := setupBalanceTestEnvironment(t)
 	defer cleanup()
-	balanceController.balanceUseCase.UpdateBalance(context.Background(), int64(1), 101)
+	err := balanceController.balanceUseCase.UpdateBalance(context.Background(), int64(1), 101)
+	assert.NoError(t, err)
 	withdrawRequests := []domain.Withdraw{
 		{
 			ID:          "order1",
 			Sum:         20.1,
-			UserId:      1,
+			UserID:      1,
 			ProcessedAt: time.Now(), //time.Now().Format(time.RFC3339),
 
 		},
 		{
 			ID:          "order2",
 			Sum:         11.12,
-			UserId:      1,
+			UserID:      1,
 			ProcessedAt: time.Now(),
 		},
 	}
 	for _, testCase := range withdrawRequests {
-		balanceController.balanceUseCase.Withdraw(context.Background(), testCase)
+		err = balanceController.balanceUseCase.Withdraw(context.Background(), testCase)
+		assert.NoError(t, err)
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/withdrawals", bytes.NewReader([]byte("")))
@@ -125,7 +129,7 @@ func TestBalanceController_Withdrawals(t *testing.T) {
 	// Проверяем результат
 	assert.Equal(t, http.StatusOK, rec.Code)
 	var responseWithdrawals []domain.WithdrawResponse
-	err := json.Unmarshal(rec.Body.Bytes(), &responseWithdrawals)
+	err = json.Unmarshal(rec.Body.Bytes(), &responseWithdrawals)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(responseWithdrawals))

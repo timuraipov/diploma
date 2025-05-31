@@ -9,7 +9,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const zapFieldsKey = "zapFields"
+type contextKey string
+
+const zapFieldsKey contextKey = "zapFields"
 
 type ZapFields map[string]zap.Field
 

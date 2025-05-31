@@ -55,7 +55,7 @@ func TestOrderRepository_SaveAndGetAll(t *testing.T) {
 		ID:         "test-order-id",
 		Status:     "NEW",
 		Accrual:    100,
-		UserId:     1,
+		UserID:     1,
 		UploadedAt: time.Now(),
 	}
 
@@ -64,7 +64,7 @@ func TestOrderRepository_SaveAndGetAll(t *testing.T) {
 	require.NoError(t, err, "Save method failed")
 
 	// Тестируем метод GetAll
-	orders, err := testRepositoryOrder.GetAll(context.Background(), order.UserId)
+	orders, err := testRepositoryOrder.GetAll(context.Background(), order.UserID)
 	require.NoError(t, err, "GetAll method failed")
 	require.Len(t, orders, 1, "Expected one order in the result")
 	// Проверяем данные заказа
@@ -72,12 +72,12 @@ func TestOrderRepository_SaveAndGetAll(t *testing.T) {
 	assert.Equal(t, order.ID, savedOrder.ID)
 	assert.Equal(t, order.Status, savedOrder.Status)
 	assert.Equal(t, order.Accrual, savedOrder.Accrual)
-	assert.Equal(t, order.UserId, savedOrder.UserId)
+	assert.Equal(t, order.UserID, savedOrder.UserID)
 	assert.WithinDuration(t, order.UploadedAt, savedOrder.UploadedAt, time.Second)
 
 	err = testRepositoryOrder.Save(context.Background(), order)
 	require.ErrorIs(t, err, domain.ErrOrderAlreadyInProcessing)
-	order.UserId = 0
+	order.UserID = 0
 	err = testRepositoryOrder.Save(context.Background(), order)
 	require.ErrorIs(t, err, domain.ErrOrderAlreadyProcessedByAnotherUser)
 }

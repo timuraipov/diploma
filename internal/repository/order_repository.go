@@ -36,7 +36,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 		"id":         order.ID,
 		"status":     order.Status,
 		"accrual":    order.Accrual,
-		"userId":     order.UserId,
+		"userId":     order.UserID,
 		"uploadedAt": order.UploadedAt,
 	}
 
@@ -46,7 +46,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 			&orderFound.ID,
 			&orderFound.Status,
 			&orderFound.Accrual,
-			&orderFound.UserId,
+			&orderFound.UserID,
 			&orderFound.UploadedAt,
 		)
 
@@ -64,7 +64,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 
 		// Заказ уже существует
 		if orderFound.ID == order.ID {
-			if orderFound.UserId == order.UserId {
+			if orderFound.UserID == order.UserID {
 				return domain.ErrOrderAlreadyInProcessing
 			}
 			return domain.ErrOrderAlreadyProcessedByAnotherUser
@@ -73,10 +73,10 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 		return nil
 	})
 }
-func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Order, error) {
+func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
 	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userId`
 	args := pgx.NamedArgs{
-		"userId": userId,
+		"userId": userID,
 	}
 	rows, err := o.database.Pool.Query(ctx, stmt, args)
 	if err != nil {
@@ -86,7 +86,7 @@ func (o *orderRepository) GetAll(ctx context.Context, userId int64) ([]domain.Or
 	var orders []domain.Order
 	for rows.Next() {
 		var order domain.Order
-		err = rows.Scan(&order.ID, &order.Status, &order.Accrual, &order.UserId, &order.UploadedAt)
+		err = rows.Scan(&order.ID, &order.Status, &order.Accrual, &order.UserID, &order.UploadedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +105,7 @@ func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Orde
 	var orders []domain.Order
 	for rows.Next() {
 		var order domain.Order
-		err = rows.Scan(&order.ID, &order.Status, &order.Accrual, &order.UserId, &order.UploadedAt)
+		err = rows.Scan(&order.ID, &order.Status, &order.Accrual, &order.UserID, &order.UploadedAt)
 		if err != nil {
 			return nil, err
 		}

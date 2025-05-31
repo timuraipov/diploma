@@ -55,5 +55,9 @@ func (rc *RegisterController) Register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Authorization", "x-user-id "+accessToken)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(signupResponse)
+	err = json.NewEncoder(w).Encode(signupResponse)
+	if err != nil {
+		rc.l.ErrorCtx(r.Context(), err.Error())
+	}
+
 }

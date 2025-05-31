@@ -1,4 +1,4 @@
-package client_mocks
+package clientmocks
 
 import (
 	"net/http"

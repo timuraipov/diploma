@@ -99,14 +99,14 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		if err == nil {
 			return domain.ErrWithdrawAlreadyUsed
 		}
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		if !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
 
 		// Получение текущего баланса
 		const stmtBalanceSelect = `SELECT balance.balance FROM "balance" WHERE user_id = @userID`
 		balanceArgs := pgx.NamedArgs{
-			"userID": withdraw.UserId,
+			"userID": withdraw.UserID,
 		}
 		var balance float64
 		err = tx.QueryRow(ctx, stmtBalanceSelect, balanceArgs).Scan(&balance)
@@ -124,7 +124,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		WHERE user_id = @userID
 		RETURNING balance`
 		balanceUpdateArgs := pgx.NamedArgs{
-			"userID":    withdraw.UserId,
+			"userID":    withdraw.UserID,
 			"updatedAt": time.Now(),
 			"accrual":   withdraw.Sum,
 		}
@@ -143,7 +143,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		withdrawInsertArgs := pgx.NamedArgs{
 			"id":          withdraw.ID,
 			"sum":         withdraw.Sum,
-			"userID":      withdraw.UserId,
+			"userID":      withdraw.UserID,
 			"processedAt": time.Now(),
 		}
 		var withdrawID string

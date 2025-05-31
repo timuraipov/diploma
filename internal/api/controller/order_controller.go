@@ -45,7 +45,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 		ID:         string(orderId),
 		Status:     domain.REGISTERED,
 		Accrual:    0,
-		UserId:     userId,
+		UserID:     userId,
 		UploadedAt: time.Now(), //time.Now().Format(time.RFC3339),
 	}
 
@@ -83,5 +83,8 @@ func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(orders)
+	err = json.NewEncoder(w).Encode(orders)
+	if err != nil {
+		o.l.ErrorCtx(r.Context(), err.Error())
+	}
 }

@@ -12,7 +12,7 @@ var (
 type Withdraw struct {
 	ID          string    `json:"order" omitempty:"true"`
 	Sum         float64   `json:"sum"`
-	UserId      int64     `json:"-"`
+	UserID      int64     `json:"-"`
 	ProcessedAt time.Time `json:"processed_at"`
 }
 type WithdrawResponse struct {
