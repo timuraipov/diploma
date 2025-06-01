@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/render"
 	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/pkg/logging"
@@ -29,17 +30,11 @@ func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 	balance, err := b.balanceUseCase.GetBalance(r.Context(), userID)
 	if err != nil {
 		b.l.ErrorCtx(r.Context(), err.Error())
-		w.WriteHeader(http.StatusBadGateway)
-		return // TODO add different statuses
+		render.Status(r, http.StatusBadGateway)
+		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(balance) //todo encode Handle
-	if err != nil {
-		b.l.ErrorCtx(r.Context(), err.Error())
-	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, balance)
 }
 
 func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +43,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+		render.Status(r, http.StatusBadRequest)
 		http.Error(w, jsonError(err.Error()), http.StatusBadRequest)
 		return
 	}
@@ -60,18 +56,19 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 	err = b.balanceUseCase.Withdraw(r.Context(), withdraw)
 	if err != nil {
 		if errors.Is(err, domain.ErrInsufficientFunds) {
-			w.WriteHeader(http.StatusPaymentRequired)
+			render.Status(r, http.StatusPaymentRequired)
 			return
 		}
 		if errors.Is(err, domain.ErrWithdrawAlreadyUsed) {
-			w.WriteHeader(http.StatusUnprocessableEntity)
+			render.Status(r, http.StatusUnprocessableEntity)
 			return
 		} //TODO add error handle
 		b.l.ErrorCtx(r.Context(), err.Error())
-		w.WriteHeader(http.StatusBadGateway)
+		render.Status(r, http.StatusBadGateway)
+		//	w.WriteHeader(http.StatusBadGateway)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	render.Status(r, http.StatusOK)
 }
 
 func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) {
@@ -80,52 +77,14 @@ func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		b.l.InfoCtx(r.Context(), err.Error())
-		w.WriteHeader(http.StatusBadGateway)
+		render.Status(r, http.StatusBadGateway)
 	}
 	if len(withdrawals) == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("Content-Type", "application/json") // не знаю зачем тесты падают.
+		render.Status(r, http.StatusNoContent)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(withdrawals)
-	if err != nil {
-		b.l.ErrorCtx(r.Context(), err.Error())
-	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, withdrawals)
 }
-
-// func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
-// 	userID := r.Context().Value("x-user-id").(int64)
-// 	b.l.InfoCtx(r.Context(), "GetBalance", zap.Int64("userID", userID))
-// 	balance, err := b.balanceUseCase.GetBalance(r.Context(), userID)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 	}
-// 	balanceResponse := &domain.BalanceResponse{
-// 		Current:   balance.Balance,
-// 		Withdrawn: 0,
-// 	}
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(balanceResponse)
-// }
-// func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
-// 	userID := r.Context().Value("x-user-id").(int64)
-// 	b.l.InfoCtx(r.Context(), "GetBalance", zap.Int64("userID", userID))
-// 	var request domain.WithdrawRequest
-// 	err := json.NewDecoder(r.Body).Decode(&request)
-// 	if err != nil {
-// 		http.Error(w, jsonError(err.Error()), http.StatusBadRequest)
-// 		return
-// 	}
-// 	withdraw := domain.Withdraw{
-// 		ID:          request.Order,
-// 		Sum:         request.Sum,
-// 		UserId:      userID,
-// 		ProcessedAt: time.Now(),
-// 	}
-// 	err = b.balanceUseCase.Withdraw(r.Context(), withdraw)
-
-// }

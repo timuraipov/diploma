@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/render"
 	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/pkg/logging"
@@ -59,12 +60,8 @@ func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Authorization", "x-user-id "+accessToken)
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(loginResponse)
-	if err != nil {
-		l.l.ErrorCtx(r.Context(), err.Error())
-	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, loginResponse)
+
 }
