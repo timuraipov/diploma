@@ -29,12 +29,14 @@ func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, jsonError(err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	user, err := l.loginUsecase.GetUserByLogin(r.Context(), request.Login)
 	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
 		http.Error(w, jsonError("User not found with the given login"), http.StatusNotFound)
 		return
 	}

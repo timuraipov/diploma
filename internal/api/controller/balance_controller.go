@@ -30,7 +30,7 @@ func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 	balance, err := b.balanceUseCase.GetBalance(r.Context(), userID)
 	if err != nil {
 		b.l.ErrorCtx(r.Context(), err.Error())
-		render.Status(r, http.StatusBadGateway)
+		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
 	render.Status(r, http.StatusOK)
@@ -43,7 +43,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		render.Status(r, http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, jsonError(err.Error()), http.StatusBadRequest)
 		return
 	}
@@ -56,19 +56,18 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 	err = b.balanceUseCase.Withdraw(r.Context(), withdraw)
 	if err != nil {
 		if errors.Is(err, domain.ErrInsufficientFunds) {
-			render.Status(r, http.StatusPaymentRequired)
+			w.WriteHeader(http.StatusPaymentRequired)
 			return
 		}
 		if errors.Is(err, domain.ErrWithdrawAlreadyUsed) {
-			render.Status(r, http.StatusUnprocessableEntity)
+			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		} //TODO add error handle
 		b.l.ErrorCtx(r.Context(), err.Error())
-		render.Status(r, http.StatusBadGateway)
-		//	w.WriteHeader(http.StatusBadGateway)
+		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
-	render.Status(r, http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) {
@@ -77,11 +76,12 @@ func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		b.l.InfoCtx(r.Context(), err.Error())
-		render.Status(r, http.StatusBadGateway)
+		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 	if len(withdrawals) == 0 {
 		w.Header().Set("Content-Type", "application/json") // не знаю зачем тесты падают.
-		render.Status(r, http.StatusNoContent)
+		render.NoContent(w, r)
 		return
 	}
 

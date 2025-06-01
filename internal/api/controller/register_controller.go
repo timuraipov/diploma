@@ -55,6 +55,6 @@ func (rc *RegisterController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Authorization", "x-user-id "+accessToken)
-	w.WriteHeader(http.StatusOK)
+	render.Status(r, http.StatusOK)
 	render.JSON(w, r, signupResponse)
 }
