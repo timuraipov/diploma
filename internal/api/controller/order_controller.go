@@ -29,7 +29,11 @@ func NewOrderController(l *logging.ZapLogger, orderUseCase domain.OrderUseCase, 
 }
 
 func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
+	if !ok {
+		o.l.ErrorCtx(r.Context(), "Cannot get userId from context")
+		w.WriteHeader(http.StatusUnauthorized)
+	}
 	orderID, err := io.ReadAll(bufio.NewReader(r.Body))
 
 	if err != nil {
@@ -70,7 +74,11 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
+	if !ok {
+		o.l.ErrorCtx(r.Context(), "Cannot get userId from context")
+		w.WriteHeader(http.StatusUnauthorized)
+	}
 	o.l.InfoCtx(r.Context(), "userID", zap.Int64("userID", userID))
 	orders, err := o.orderUseCase.GetAll(r.Context(), userID)
 	w.Header().Set("Content-Type", "application/json")

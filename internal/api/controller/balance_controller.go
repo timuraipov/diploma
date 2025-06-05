@@ -26,7 +26,11 @@ func NewBalanceController(logger *logging.ZapLogger, br domain.BalanceUseCase, c
 	}
 }
 func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
+	if !ok {
+		b.l.ErrorCtx(r.Context(), "Cannot get userId from context")
+		w.WriteHeader(http.StatusUnauthorized)
+	}
 	balance, err := b.balanceUseCase.GetBalance(r.Context(), userID)
 	if err != nil {
 		b.l.ErrorCtx(r.Context(), err.Error())
@@ -38,7 +42,11 @@ func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
+	if !ok {
+		b.l.ErrorCtx(r.Context(), "Cannot get userId from context")
+		w.WriteHeader(http.StatusUnauthorized)
+	}
 	var request domain.WithdrawRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -71,7 +79,11 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(domain.UserIDHeader).(int64)
+	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
+	if !ok {
+		b.l.ErrorCtx(r.Context(), "Cannot get userId from context")
+		w.WriteHeader(http.StatusUnauthorized)
+	}
 	withdrawals, err := b.balanceUseCase.Withdrawals(r.Context(), userID)
 
 	if err != nil {
