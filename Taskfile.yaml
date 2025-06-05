@@ -18,3 +18,7 @@ tasks:
     desc: 'run linters'
     cmds:
       - golangci-lint run
+  fmt:
+    desc: 'run formatter'
+    cmds:
+      - ~/go/bin/gofumpt -l -w .
