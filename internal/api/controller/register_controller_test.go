@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,12 +27,10 @@ func setupTestRegisterEnvironment(t *testing.T) (*RegisterController, func()) {
 	if err != nil {
 		t.Fatalf("failed to create logger: %v", err)
 	}
-	cfg, err := bootstrap.MustLoad()
-	assert.NoError(t, err)
+	cfg := bootstrap.MustLoad()
 	// Настройка тестовой базы данных
 	userRepo := setupTestRegisterRepository(t)
-	timeout := time.Duration(3000) * time.Second
-	userUseCase := usecase.NewRegisterUsecase(logger, userRepo, timeout)
+	userUseCase := usecase.NewRegisterUsecase(logger, userRepo, cfg)
 
 	// Создание контроллера
 	registerController := NewRegisterController(logger, userUseCase, cfg)

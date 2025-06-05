@@ -6,10 +6,7 @@ type Application struct {
 
 func App() (Application, error) {
 
-	cfg, err := MustLoad()
-	if err != nil {
-		return Application{}, err
-	}
+	cfg := MustLoad()
 
 	app := &Application{Cfg: cfg}
 	return *app, nil

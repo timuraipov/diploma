@@ -2,13 +2,13 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
 	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/pkg/logging"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginController struct {
@@ -34,36 +34,20 @@ func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := l.loginUsecase.GetUserByLogin(r.Context(), request.Login)
+	authResponse, err := l.loginUsecase.Login(r.Context(), request)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		http.Error(w, jsonError("User not found with the given login"), http.StatusNotFound)
-		return
+		if errors.Is(err, domain.ErrUserNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, domain.ErrIncorrectLoginOrPassword) {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)) != nil {
-		http.Error(w, jsonError("Invalid credentials"), http.StatusUnauthorized)
-		return
-	}
-
-	accessToken, err := l.loginUsecase.CreateAccessToken(&user, l.cfg.AccessTokenSecret, l.cfg.AccessTokenExpiryHour)
-	if err != nil {
-		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	refreshToken, err := l.loginUsecase.CreateRefreshToken(&user, l.cfg.RefreshTokenSecret, l.cfg.RefreshTokenExpiryHour)
-	if err != nil {
-		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	loginResponse := domain.LoginResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-	w.Header().Set("Authorization", "x-user-id "+accessToken)
+	w.Header().Set("Authorization", "x-user-id "+authResponse.AccessToken)
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, loginResponse)
+	render.JSON(w, r, authResponse)
 
 }

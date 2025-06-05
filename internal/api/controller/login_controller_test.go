@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,19 +22,17 @@ func setupLoginTestEnvironment(t *testing.T) (*LoginController, func()) {
 	logger, err := logging.NewZapLogger(zap.DebugLevel)
 	require.NoError(t, err)
 
-	cfg, err := bootstrap.MustLoad()
-	require.NoError(t, err)
+	cfg := bootstrap.MustLoad()
 
 	// Настройка mock-репозитория
 	userRepo := mocks.NewMockUserRepository()
 
 	// Создание usecase
-	timeout := time.Duration(3000) * time.Second
-	loginUseCase := usecase.NewLoginUsecase(logger, &userRepo, timeout)
+	loginUseCase := usecase.NewLoginUsecase(logger, &userRepo, cfg)
 
 	// Создание контроллера
 	loginController := NewLoginController(logger, loginUseCase, cfg)
-	userUseCase := usecase.NewRegisterUsecase(logger, &userRepo, timeout)
+	userUseCase := usecase.NewRegisterUsecase(logger, &userRepo, cfg)
 	userRequest := domain.RegisterRequest{
 		Login:    "testuser",
 		Password: "testpassword",

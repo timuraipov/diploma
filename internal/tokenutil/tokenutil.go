@@ -9,15 +9,13 @@ import (
 	"github.com/timuraipov/diploma/internal/domain"
 )
 
+type AuthTokens struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
 func CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
 	exp := time.Now().Add(time.Hour * time.Duration(expiry))
-	// claims := &domain.JwtCustomClaims{
-	// 	Name: user.Login,
-	// 	ID:   user.ID,
-	// 	RegisteredClaims: jwt.StandardClaims{
-	// 		ExpiresAt: exp,
-	// 	},
-	// }
 	claims := &jwt.RegisteredClaims{
 		Subject:   user.Login,
 		ExpiresAt: &jwt.NumericDate{Time: exp},
@@ -85,4 +83,20 @@ func ExtractIDFromToken(requestToken string, secret string) (int64, error) {
 		return 0, fmt.Errorf("failed to parse jti claim: %v", err)
 	}
 	return id, nil
+}
+
+func GetTokensByUser(user *domain.User, accessSecret string, refreshSecret string, accessExpiry int, refreshExpiry int) (AuthTokens, error) {
+	accessToken, err := CreateAccessToken(user, accessSecret, accessExpiry)
+	if err != nil {
+		return AuthTokens{}, err
+	}
+	refreshToken, err := CreateRefreshToken(user, refreshSecret, refreshExpiry)
+	if err != nil {
+		return AuthTokens{}, err
+	}
+	authResp := AuthTokens{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	return authResp, nil
 }

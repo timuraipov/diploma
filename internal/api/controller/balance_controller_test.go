@@ -23,8 +23,7 @@ func setupBalanceTestEnvironment(t *testing.T) (*BalanceController, func()) {
 	logger, err := logging.NewZapLogger(zap.DebugLevel)
 	require.NoError(t, err)
 
-	cfg, err := bootstrap.MustLoad()
-	require.NoError(t, err)
+	cfg := bootstrap.MustLoad()
 
 	// Настройка mock-репозитория
 	balanceRepo := mocks.NewMockBalanceRepository()

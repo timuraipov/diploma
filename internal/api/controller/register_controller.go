@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -31,30 +32,18 @@ func (rc *RegisterController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := rc.registerUsecase.Create(r.Context(), request)
+	signupResponse, err := rc.registerUsecase.Create(r.Context(), request)
 	if err != nil {
+		if errors.Is(err, domain.ErrUserAlreadyRegistered) {
+			rc.l.ErrorCtx(r.Context(), err.Error())
+			http.Error(w, jsonError(err.Error()), http.StatusConflict)
+			return
+		}
 		rc.l.ErrorCtx(r.Context(), err.Error())
 		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
 		return
 	}
-
-	accessToken, err := rc.registerUsecase.CreateAccessToken(&user, rc.cfg.AccessTokenSecret, rc.cfg.AccessTokenExpiryHour)
-	if err != nil {
-		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	refreshToken, err := rc.registerUsecase.CreateRefreshToken(&user, rc.cfg.RefreshTokenSecret, rc.cfg.RefreshTokenExpiryHour)
-	if err != nil {
-		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
-		return
-	}
-	signupResponse := domain.RegisterResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	w.Header().Set("Authorization", "x-user-id "+accessToken)
+	w.Header().Set("Authorization", "x-user-id "+signupResponse.AccessToken)
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, signupResponse)
 }

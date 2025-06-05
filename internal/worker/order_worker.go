@@ -5,7 +5,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/timuraipov/diploma/bootstrap"
+	"github.com/timuraipov/diploma/internal/client"
 	"github.com/timuraipov/diploma/internal/domain"
+	"github.com/timuraipov/diploma/internal/repository"
+	"github.com/timuraipov/diploma/internal/storage/db"
+	"github.com/timuraipov/diploma/internal/usecase"
 	"github.com/timuraipov/diploma/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -15,6 +20,16 @@ type OrderWorker struct {
 	OrderUseCase domain.OrderUseCase
 	ctx          context.Context
 	cancel       context.CancelFunc
+}
+
+func RunWorker(l *logging.ZapLogger, db db.DB, cfg *bootstrap.Config, timeout time.Duration) {
+	accrualClient := client.NewClient(cfg.AccrualAddress)
+	br := repository.NewBalanceRepository(db)
+	balanceUseCase := usecase.NewBalanceUseCase(l, br, timeout)
+	orderRepository := repository.NewOrderRepository(db)
+	orderUseCase := usecase.NewOrderUseCase(l, orderRepository, accrualClient, balanceUseCase, timeout)
+	worker := NewOrderWorker(l, orderUseCase)
+	worker.Start()
 }
 
 func NewOrderWorker(l *logging.ZapLogger, orderUseCase domain.OrderUseCase) *OrderWorker {

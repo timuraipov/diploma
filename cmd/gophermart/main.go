@@ -13,6 +13,7 @@ import (
 	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/api/route"
 	"github.com/timuraipov/diploma/internal/storage/db"
+	"github.com/timuraipov/diploma/internal/worker"
 	"github.com/timuraipov/diploma/pkg/logging"
 	"go.uber.org/zap"
 )
@@ -32,12 +33,16 @@ func main() {
 	timeout := time.Duration(app.Cfg.ContextTimeout) * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	// Listen for syscall signals for process to interrupt/quit
-
+	defer cancel()
 	db, err := db.NewDB(ctx, app.Cfg.DSN)
 	if err != nil {
 		panic(err)
 	}
-	go bootstrap.RunWorker(l, *db, app.Cfg, timeout)
+	defer func() {
+		l.InfoCtx(ctx, "Close DB pool connections", zap.Error(err))
+		db.Pool.Close()
+	}()
+	go worker.RunWorker(l, *db, app.Cfg, timeout)
 	r := chi.NewRouter()
 	route.Setup(l, app.Cfg, timeout, *db, r)
 
@@ -58,7 +63,6 @@ func main() {
 	l.InfoCtx(ctx, "Shutting down server...")
 
 	// Контекст с таймаутом
-	defer cancel()
 
 	// Корректное завершение
 	if err := srv.Shutdown(ctx); err != nil {
@@ -66,6 +70,4 @@ func main() {
 	}
 
 	l.InfoCtx(ctx, "Server gracefully stopped")
-	//err = http.ListenAndServe(app.Cfg.RunAddress, r)
-
 }

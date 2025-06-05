@@ -6,10 +6,8 @@ import (
 )
 
 func main() {
-	cfg, err := bootstrap.MustLoad()
-	if err != nil {
-		panic(err)
-	}
+	cfg := bootstrap.MustLoad()
+
 	if err := db.RunMigrations(cfg.DSN); err != nil {
 		panic(err)
 	}

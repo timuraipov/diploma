@@ -5,7 +5,10 @@ import (
 	"errors"
 )
 
-var ErrUserNotFound = errors.New("user with such id not found")
+var (
+	ErrUserNotFound             = errors.New("user with such id not found")
+	ErrIncorrectLoginOrPassword = errors.New("login request has incorrect login or password")
+)
 
 type User struct {
 	ID       int64  `json:"id"`

@@ -95,7 +95,6 @@ func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Or
 	return orders, nil
 }
 func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
-	// const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = 'REGISTERED' or status = 'PROCESSING'`
 	var stmt = fmt.Sprintf(`SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = '%s'  or status = '%s'`, domain.REGISTERED, domain.PROCESSING)
 	rows, err := o.database.Pool.Query(ctx, stmt)
 	if err != nil {
@@ -132,41 +131,3 @@ func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) e
 		return nil
 	})
 }
-
-// func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error { // check is already processed by another user
-// 	const stmt = `UPDATE "order" SET status = @status, accrual = @accrual WHERE id = @id`
-// 	args := pgx.NamedArgs{
-// 		"id":      order.ID,
-// 		"status":  order.Status,
-// 		"accrual": order.Accrual,
-// 	}
-// 	tx, err := o.database.Pool.BeginTx(ctx, pgx.TxOptions{})
-// 	defer func() {
-// 		if err != nil {
-// 			tx.Rollback(ctx)
-// 		} else {
-// 			tx.Commit(ctx)
-// 		}
-// 	}()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	row := tx.QueryRow(ctx, stmt, args)
-// 	err = row.Scan()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// if err != nil {
-// 	if pgErr, ok := err.(*pgconn.PgError); ok {
-// 		if pgErr.Code == pgerrcode.UniqueViolation {
-// 			return domain.OrderAlready
-// 		} else {
-// 			fmt.Printf("🎯 PgError: %s (Code: %s)\n", pgErr.Message, pgErr.Code)
-// 		}
-// 	} else {
-// 		fmt.Printf("❗ Не PgError: %T - %v\n", err, err)
-// 	}
-// }

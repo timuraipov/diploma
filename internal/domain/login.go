@@ -1,6 +1,8 @@
 package domain
 
-import "context"
+import (
+	"context"
+)
 
 type LoginRequest struct {
 	Login    string `json:"login"`
@@ -12,7 +14,5 @@ type LoginResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 type LoginUsecase interface {
-	GetUserByLogin(c context.Context, login string) (User, error)
-	CreateAccessToken(user *User, secret string, expiry int) (accessToken string, err error)
-	CreateRefreshToken(user *User, secret string, expiry int) (refreshToken string, err error)
+	Login(c context.Context, credentials LoginRequest) (AuthResponse, error)
 }

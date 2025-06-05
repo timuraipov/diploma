@@ -2,64 +2,60 @@ package usecase
 
 import (
 	"context"
-	"time"
 
+	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/internal/tokenutil"
 	"github.com/timuraipov/diploma/pkg/logging"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterUsecase struct {
 	l              *logging.ZapLogger
 	userRepository domain.UserRepository
-	contextTimeout time.Duration
+	cfg            *bootstrap.Config
 }
 
-func NewRegisterUsecase(logger *logging.ZapLogger, userRepository domain.UserRepository, timeout time.Duration) domain.RegisterUsecase {
+func NewRegisterUsecase(logger *logging.ZapLogger, userRepository domain.UserRepository, cfg *bootstrap.Config) domain.RegisterUsecase {
 	return &RegisterUsecase{
 		l:              logger,
 		userRepository: userRepository,
-		contextTimeout: timeout,
+		cfg:            cfg,
 	}
 }
-func (ru *RegisterUsecase) Create(ctx context.Context, userRequest domain.RegisterRequest) (domain.User, error) {
+func (ru *RegisterUsecase) Create(ctx context.Context, userRequest domain.RegisterRequest) (domain.AuthResponse, error) {
 	_, err := ru.GetByLogin(ctx, userRequest.Login)
 	if err == nil {
 		ru.l.ErrorCtx(ctx, "User already exists with the given login"+userRequest.Login)
-		return domain.User{}, domain.ErrUserAlreadyRegistered
+		return domain.AuthResponse{}, domain.ErrUserAlreadyRegistered
 	}
 	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(userRequest.Password), bcrypt.DefaultCost)
 	if err != nil {
 		ru.l.ErrorCtx(ctx, err.Error())
 
-		return domain.User{}, err
+		return domain.AuthResponse{}, err
 	}
 	userRequest.Password = string(encryptedPassword)
 	user := domain.User{
 		Login:    userRequest.Login,
 		Password: userRequest.Password,
 	}
-	// ctx, cancel := context.WithTimeout(ctx, ru.contextTimeout)
-	// defer cancel()
+
 	err = ru.userRepository.Create(ctx, &user)
 	if err != nil {
 		ru.l.ErrorCtx(ctx, err.Error())
-		return domain.User{}, err
+		return domain.AuthResponse{}, err
 	}
-	return user, nil
+	authResp, err := tokenutil.GetTokensByUser(&user, ru.cfg.AccessTokenSecret, ru.cfg.RefreshTokenSecret, ru.cfg.AccessTokenExpiryHour, ru.cfg.RefreshTokenExpiryHour)
+	if err != nil {
+		ru.l.ErrorCtx(ctx, "Something wrong with generating access/refresh tokens", zap.Error(err))
+		return domain.AuthResponse{}, err
+	}
+	response := domain.AuthResponse{AccessToken: authResp.AccessToken, RefreshToken: authResp.RefreshToken}
+	return response, nil
 }
 func (ru *RegisterUsecase) GetByLogin(ctx context.Context, login string) (domain.User, error) {
 	user, err := ru.userRepository.GetByLogin(ctx, login)
 	return user, err
-}
-func (ru *RegisterUsecase) GetByID(ctx context.Context, id int64) (domain.User, error) {
-	user, err := ru.userRepository.GetByID(ctx, id)
-	return user, err
-}
-func (ru *RegisterUsecase) CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
-	return tokenutil.CreateAccessToken(user, secret, expiry)
-}
-func (ru *RegisterUsecase) CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshToken string, err error) {
-	return tokenutil.CreateRefreshToken(user, secret, expiry)
 }

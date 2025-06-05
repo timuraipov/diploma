@@ -24,8 +24,7 @@ func setupOrderTestEnvironment(t *testing.T) (*OrderController, func()) {
 	logger, err := logging.NewZapLogger(zap.DebugLevel)
 	require.NoError(t, err)
 
-	cfg, err := bootstrap.MustLoad()
-	require.NoError(t, err)
+	cfg := bootstrap.MustLoad()
 	timeout := time.Duration(3000) * time.Second
 	// Настройка mock-репозитория
 	orderRepo := mocks.NewMockOrderRepository()

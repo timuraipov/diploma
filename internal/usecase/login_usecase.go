@@ -2,35 +2,42 @@ package usecase
 
 import (
 	"context"
-	"time"
 
+	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/internal/tokenutil"
 	"github.com/timuraipov/diploma/pkg/logging"
+	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type loginUsecase struct {
 	l              *logging.ZapLogger
 	userRepository domain.UserRepository
-	contextTimeout time.Duration
+	cfg            *bootstrap.Config
 }
 
-func NewLoginUsecase(logger *logging.ZapLogger, userRepository domain.UserRepository, timeout time.Duration) domain.LoginUsecase {
+func NewLoginUsecase(logger *logging.ZapLogger, userRepository domain.UserRepository, cfg *bootstrap.Config) domain.LoginUsecase {
 	return &loginUsecase{
 		l:              logger,
 		userRepository: userRepository,
-		contextTimeout: timeout,
+		cfg:            cfg,
 	}
 }
 
-func (lu *loginUsecase) GetUserByLogin(ctx context.Context, login string) (domain.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, lu.contextTimeout)
-	defer cancel()
-	return lu.userRepository.GetByLogin(ctx, login)
-}
-func (lu *loginUsecase) CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
-	return tokenutil.CreateAccessToken(user, secret, expiry)
-}
-func (lu *loginUsecase) CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshToken string, err error) {
-	return tokenutil.CreateRefreshToken(user, secret, expiry)
+func (lu *loginUsecase) Login(ctx context.Context, credentials domain.LoginRequest) (domain.AuthResponse, error) {
+	user, err := lu.userRepository.GetByLogin(ctx, credentials.Login)
+	if err != nil {
+		return domain.AuthResponse{}, domain.ErrUserNotFound
+	}
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password)) != nil {
+		return domain.AuthResponse{}, domain.ErrIncorrectLoginOrPassword
+	}
+	authResp, err := tokenutil.GetTokensByUser(&user, lu.cfg.AccessTokenSecret, lu.cfg.RefreshTokenSecret, lu.cfg.AccessTokenExpiryHour, lu.cfg.RefreshTokenExpiryHour)
+	if err != nil {
+		lu.l.ErrorCtx(ctx, "Something wrong with generating access/refresh tokens", zap.Error(err))
+		return domain.AuthResponse{}, err
+	}
+	response := domain.AuthResponse{AccessToken: authResp.AccessToken, RefreshToken: authResp.RefreshToken}
+	return response, nil
 }

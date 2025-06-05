@@ -22,7 +22,7 @@ var (
 	once sync.Once
 )
 
-func MustLoad() (*Config, error) {
+func MustLoad() *Config {
 	cfg := &Config{}
 
 	once.Do(func() {
@@ -37,5 +37,5 @@ func MustLoad() (*Config, error) {
 	if err != nil {
 		panic(`env file parse error: ` + err.Error())
 	}
-	return cfg, err
+	return cfg
 }
