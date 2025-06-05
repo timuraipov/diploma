@@ -12,7 +12,6 @@ import (
 var testRepository *userRepository
 
 func setupTestDBUser(t *testing.T) {
-
 	dsn := os.Getenv("DATABASE_URI")
 	if dsn == "" {
 		t.Fatal("DATABASE_URI is not set")

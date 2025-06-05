@@ -24,6 +24,7 @@ func NewRegisterUsecase(logger *logging.ZapLogger, userRepository domain.UserRep
 		cfg:            cfg,
 	}
 }
+
 func (ru *RegisterUsecase) Create(ctx context.Context, userRequest domain.RegisterRequest) (domain.AuthResponse, error) {
 	_, err := ru.GetByLogin(ctx, userRequest.Login)
 	if err == nil {
@@ -55,6 +56,7 @@ func (ru *RegisterUsecase) Create(ctx context.Context, userRequest domain.Regist
 	response := domain.AuthResponse{AccessToken: authResp.AccessToken, RefreshToken: authResp.RefreshToken}
 	return response, nil
 }
+
 func (ru *RegisterUsecase) GetByLogin(ctx context.Context, login string) (domain.User, error) {
 	user, err := ru.userRepository.GetByLogin(ctx, login)
 	return user, err

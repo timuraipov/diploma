@@ -41,12 +41,13 @@ func (o *OrderUseCase) Save(ctx context.Context, order domain.Order) error {
 
 	return err
 }
+
 func (o *OrderUseCase) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
 	orders, err := o.orderRepository.GetAll(ctx, userID)
 	return orders, err
 }
-func (o *OrderUseCase) Accrual(ctx context.Context, order domain.Order) (int, error) {
 
+func (o *OrderUseCase) Accrual(ctx context.Context, order domain.Order) (int, error) {
 	o.l.InfoCtx(ctx, "Processing order", zap.Any("order-------", order))
 	result, statusCode, err := o.client.GetOrder(order.ID)
 	if err != nil {
@@ -85,6 +86,7 @@ func (o *OrderUseCase) GetUnhandledOrders(ctx context.Context) ([]domain.Order, 
 	}
 	return orders, nil
 }
+
 func (o *OrderUseCase) luhnCheck(number string) bool {
 	var sum int
 	alt := false

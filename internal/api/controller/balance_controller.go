@@ -25,6 +25,7 @@ func NewBalanceController(logger *logging.ZapLogger, br domain.BalanceUseCase, c
 		cfg:            cfg,
 	}
 }
+
 func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
 	if !ok {
@@ -59,7 +60,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 		ID:          request.Order,
 		Sum:         request.Sum,
 		UserID:      userID,
-		ProcessedAt: time.Now(), //time.Now().Format(time.RFC3339),
+		ProcessedAt: time.Now(), // time.Now().Format(time.RFC3339),
 	}
 	err = b.balanceUseCase.Withdraw(r.Context(), withdraw)
 	if err != nil {
@@ -70,7 +71,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, domain.ErrWithdrawAlreadyUsed) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
-		} //TODO add error handle
+		}
 		b.l.ErrorCtx(r.Context(), err.Error())
 		w.WriteHeader(http.StatusBadGateway)
 		return
@@ -85,7 +86,6 @@ func (b *BalanceController) Withdrawals(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 	withdrawals, err := b.balanceUseCase.Withdrawals(r.Context(), userID)
-
 	if err != nil {
 		b.l.InfoCtx(r.Context(), err.Error())
 		w.WriteHeader(http.StatusBadGateway)

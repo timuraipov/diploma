@@ -22,5 +22,4 @@ func NewOrderRouter(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout ti
 	OrderController := controller.NewOrderController(logger, orderUseCase, cfg)
 	router.Get("/api/user/orders", OrderController.GetOrders)
 	router.Post("/api/user/orders", OrderController.Save)
-
 }

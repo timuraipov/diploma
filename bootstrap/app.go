@@ -5,7 +5,6 @@ type Application struct {
 }
 
 func App() (Application, error) {
-
 	cfg := MustLoad()
 
 	app := &Application{Cfg: cfg}

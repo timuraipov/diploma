@@ -46,10 +46,12 @@ func (b *balanceUseCase) GetBalance(ctx context.Context, userID int64) (domain.B
 		Withdrawn: withdrawn,
 	}, nil
 }
+
 func (b *balanceUseCase) Withdraw(ctx context.Context, withdraw domain.Withdraw) error {
-	err := b.balanceRepository.Withdraw(ctx, withdraw) //return 422 if order does not exist
+	err := b.balanceRepository.Withdraw(ctx, withdraw) // return 422 if order does not exist
 	return err
 }
+
 func (b *balanceUseCase) Withdrawals(ctx context.Context, userID int64) ([]domain.WithdrawResponse, error) {
 	withdrawals, err := b.balanceRepository.Withdrawals(ctx, userID)
 	var withdrawResponse []domain.WithdrawResponse

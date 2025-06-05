@@ -40,6 +40,7 @@ func setupBalanceTestEnvironment(t *testing.T) (*BalanceController, func()) {
 
 	return balanceController, func() {}
 }
+
 func TestBalanceController_GetBalance(t *testing.T) {
 	balanceController, cleanup := setupBalanceTestEnvironment(t)
 	defer cleanup()
@@ -61,7 +62,6 @@ func TestBalanceController_GetBalance(t *testing.T) {
 	err = json.Unmarshal(rec.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, 100.1, response.Current)
-	//todo add negative cases
 }
 
 func TestBalanceController_Withdraw(t *testing.T) {
@@ -88,8 +88,8 @@ func TestBalanceController_Withdraw(t *testing.T) {
 	// Создание запроса
 	// Проверяем результат
 	assert.Equal(t, http.StatusOK, rec.Code)
-	//todo add negative cases
 }
+
 func TestBalanceController_Withdrawals(t *testing.T) {
 	balanceController, cleanup := setupBalanceTestEnvironment(t)
 	defer cleanup()
@@ -100,7 +100,7 @@ func TestBalanceController_Withdrawals(t *testing.T) {
 			ID:          "order1",
 			Sum:         20.1,
 			UserID:      1,
-			ProcessedAt: time.Now(), //time.Now().Format(time.RFC3339),
+			ProcessedAt: time.Now(), // time.Now().Format(time.RFC3339),
 
 		},
 		{

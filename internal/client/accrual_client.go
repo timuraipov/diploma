@@ -36,7 +36,6 @@ func (c *accrualClient) GetOrder(number string) (*OrderResponse, int, error) {
 	resp, err := c.resty.R().
 		SetResult(&OrderResponse{}).
 		Get(url)
-
 	if err != nil {
 		return nil, 0, err // ошибка сетевого уровня
 	}

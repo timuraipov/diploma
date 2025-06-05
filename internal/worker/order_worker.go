@@ -33,7 +33,7 @@ func RunWorker(l *logging.ZapLogger, db db.DB, cfg *bootstrap.Config, timeout ti
 }
 
 func NewOrderWorker(l *logging.ZapLogger, orderUseCase domain.OrderUseCase) *OrderWorker {
-	ctx, cancel := context.WithCancel(context.Background()) // todo pass parent context
+	ctx, cancel := context.WithCancel(context.Background())
 	return &OrderWorker{
 		l:            l,
 		OrderUseCase: orderUseCase,
@@ -41,6 +41,7 @@ func NewOrderWorker(l *logging.ZapLogger, orderUseCase domain.OrderUseCase) *Ord
 		cancel:       cancel,
 	}
 }
+
 func (o *OrderWorker) Start() {
 	const numJobs = 5
 	jobs := make(chan domain.Order, numJobs)
@@ -50,7 +51,6 @@ func (o *OrderWorker) Start() {
 		go o.Worker(o.ctx, jobs)
 	}
 	o.l.InfoCtx(o.ctx, "Starting order worker")
-
 }
 
 func (o *OrderWorker) StartTicker(ctx context.Context, orderUseCase domain.OrderUseCase, jobs chan domain.Order) {
@@ -74,6 +74,7 @@ func (o *OrderWorker) StartTicker(ctx context.Context, orderUseCase domain.Order
 		}
 	}
 }
+
 func (o *OrderWorker) Worker(ctx context.Context, jobs chan domain.Order) {
 	for {
 		select {
@@ -89,6 +90,5 @@ func (o *OrderWorker) Worker(ctx context.Context, jobs chan domain.Order) {
 			}
 			continue
 		}
-
 	}
 }

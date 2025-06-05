@@ -22,6 +22,7 @@ func setupTestRegisterRepository(t *testing.T) domain.UserRepository {
 	userRepositoryMock := mocks.NewMockUserRepository()
 	return &userRepositoryMock
 }
+
 func setupTestRegisterEnvironment(t *testing.T) (*RegisterController, func()) {
 	logger, err := logging.NewZapLogger(zap.DebugLevel)
 	if err != nil {

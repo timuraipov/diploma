@@ -16,6 +16,7 @@ func NewMockOrderRepository() MockOrderRepository {
 	db := make(map[string]domain.Order)
 	return MockOrderRepository{db: db}
 }
+
 func (o *MockOrderRepository) Save(ctx context.Context, order domain.Order) error {
 	orderFound, ok := o.db[order.ID]
 	if ok {
@@ -27,6 +28,7 @@ func (o *MockOrderRepository) Save(ctx context.Context, order domain.Order) erro
 	o.db[order.ID] = order
 	return nil
 }
+
 func (o *MockOrderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
 	orders := make([]domain.Order, 0)
 	for _, order := range o.db {
@@ -36,6 +38,7 @@ func (o *MockOrderRepository) GetAll(ctx context.Context, userID int64) ([]domai
 	}
 	return orders, nil
 }
+
 func (o *MockOrderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
 	orders := make([]domain.Order, 0)
 	for _, order := range o.db {
@@ -45,6 +48,7 @@ func (o *MockOrderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.
 	}
 	return orders, nil
 }
+
 func (o *MockOrderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
 	orderFound, ok := o.db[order.ID]
 	if ok {

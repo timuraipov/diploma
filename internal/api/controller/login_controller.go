@@ -24,6 +24,7 @@ func NewLoginController(logger *logging.ZapLogger, loginUsecase domain.LoginUsec
 		cfg:          cfg,
 	}
 }
+
 func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 	var request domain.LoginRequest
 
@@ -49,5 +50,4 @@ func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Authorization", "x-user-id "+authResponse.AccessToken)
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, authResponse)
-
 }

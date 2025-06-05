@@ -17,6 +17,7 @@ func NewUserRepository(db db.DB) *userRepository {
 		database: db,
 	}
 }
+
 func (u *userRepository) Create(ctx context.Context, user *domain.User) error {
 	const stmt = `INSERT INTO "user" (login, password) VALUES (@login, @password) returning (id)`
 	args := pgx.NamedArgs{
@@ -37,6 +38,7 @@ func (u *userRepository) GetByLogin(ctx context.Context, login string) (domain.U
 
 	return user, err
 }
+
 func (u *userRepository) GetByID(ctx context.Context, id int64) (domain.User, error) {
 	user := domain.User{}
 	const stmt = `SELECT id, login, password from "user" WHERE id=@id`

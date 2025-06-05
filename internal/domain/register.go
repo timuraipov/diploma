@@ -5,9 +5,7 @@ import (
 	"errors"
 )
 
-var (
-	ErrUserAlreadyRegistered = errors.New("user already registered")
-)
+var ErrUserAlreadyRegistered = errors.New("user already registered")
 
 type RegisterRequest struct {
 	Login    string `json:"login"`

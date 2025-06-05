@@ -43,6 +43,7 @@ func setupOrderTestEnvironment(t *testing.T) (*OrderController, func()) {
 
 	return orderController, func() {}
 }
+
 func TestOrderController_CreateOrder(t *testing.T) {
 	// Настройка окружения
 	orderController, cleanup := setupOrderTestEnvironment(t)
@@ -61,7 +62,6 @@ func TestOrderController_CreateOrder(t *testing.T) {
 	// Создание запроса
 	// Проверяем результат
 	assert.Equal(t, http.StatusAccepted, rec.Code)
-
 }
 
 func TestOrderController_GetOrders(t *testing.T) {

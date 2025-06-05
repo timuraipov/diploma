@@ -35,7 +35,6 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 	orderID, err := io.ReadAll(bufio.NewReader(r.Body))
-
 	if err != nil {
 		o.l.ErrorCtx(r.Context(), "invalid data")
 	}
@@ -51,7 +50,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 		Status:     domain.REGISTERED,
 		Accrual:    0,
 		UserID:     userID,
-		UploadedAt: time.Now(), //time.Now().Format(time.RFC3339),
+		UploadedAt: time.Now(), // time.Now().Format(time.RFC3339),
 	}
 
 	err = o.orderUseCase.Save(r.Context(), order)
@@ -73,6 +72,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
+
 func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
 	if !ok {
@@ -93,5 +93,4 @@ func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, orders)
-
 }

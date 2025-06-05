@@ -24,6 +24,7 @@ func NewRegisterController(logger *logging.ZapLogger, ru domain.RegisterUsecase,
 		cfg:             cfg,
 	}
 }
+
 func (rc *RegisterController) Register(w http.ResponseWriter, r *http.Request) {
 	var request domain.RegisterRequest
 	err := json.NewDecoder(r.Body).Decode(&request)

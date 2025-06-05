@@ -18,9 +18,7 @@ type Config struct {
 	RefreshTokenSecret     string `env:"REFRESH_TOKEN_SECRET" envDefault:"secret"`
 }
 
-var (
-	once sync.Once
-)
+var once sync.Once
 
 func MustLoad() *Config {
 	cfg := &Config{}

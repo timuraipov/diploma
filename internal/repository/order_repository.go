@@ -19,6 +19,7 @@ func NewOrderRepository(db db.DB) *orderRepository {
 		database: db,
 	}
 }
+
 func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 	const stmtCheck = `SELECT id, status, accrual, user_id, uploaded_at 
 	FROM "order" 
@@ -49,7 +50,6 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 			&orderFound.UserID,
 			&orderFound.UploadedAt,
 		)
-
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				// Заказа нет, вставляем новый
@@ -73,6 +73,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 		return nil
 	})
 }
+
 func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
 	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userID`
 	args := pgx.NamedArgs{
@@ -94,8 +95,9 @@ func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Or
 	}
 	return orders, nil
 }
+
 func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
-	var stmt = fmt.Sprintf(`SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = '%s'  or status = '%s'`, domain.REGISTERED, domain.PROCESSING)
+	stmt := fmt.Sprintf(`SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = '%s'  or status = '%s'`, domain.REGISTERED, domain.PROCESSING)
 	rows, err := o.database.Pool.Query(ctx, stmt)
 	if err != nil {
 		return nil, err
@@ -112,6 +114,7 @@ func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Orde
 	}
 	return orders, nil
 }
+
 func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
 	const stmt = `UPDATE "order" SET status = @status, accrual = @accrual WHERE id = @id`
 	args := pgx.NamedArgs{

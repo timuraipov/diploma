@@ -43,7 +43,6 @@ func setupLoginTestEnvironment(t *testing.T) (*LoginController, func()) {
 }
 
 func TestLoginController_LoginUser(t *testing.T) {
-
 	// Настройка окружения
 	loginController, cleanup := setupLoginTestEnvironment(t)
 	defer cleanup()
@@ -59,7 +58,7 @@ func TestLoginController_LoginUser(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
 	err := mockRepo.Create(context.Background(), &mockUser)
 	assert.NoError(t, err)
-	//создаем регистрацию
+	// создаем регистрацию
 
 	// Создаем тестовый HTTP-запрос
 	loginRequest := map[string]string{

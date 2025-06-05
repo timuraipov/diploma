@@ -15,7 +15,6 @@ import (
 var testRepositoryOrder *orderRepository
 
 func setupTestDBOrder(t *testing.T) {
-
 	dsn := os.Getenv("DATABASE_URI")
 	if dsn == "" {
 		t.Fatal("DATABASE_URI is not set")
@@ -39,12 +38,14 @@ func setupTestDBOrder(t *testing.T) {
 	}
 	testRepositoryOrder = NewOrderRepository(*db)
 }
+
 func cleanupTestDBOrder(t *testing.T) {
 	_, err := testRepositoryOrder.database.Pool.Exec(context.Background(), `DROP TABLE "order"`)
 	if err != nil {
 		t.Fatalf("failed to drop table: %v", err)
 	}
 }
+
 func TestOrderRepository_SaveAndGetAll(t *testing.T) {
 	// Подготовка тестовой базы данных
 	setupTestDBOrder(t)

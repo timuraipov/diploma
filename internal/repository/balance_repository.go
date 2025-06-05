@@ -27,7 +27,6 @@ func (b *balanceRepository) GetBalance(ctx context.Context, userID int64) (domai
 		"userID": userID,
 	}
 	err := b.database.Pool.QueryRow(ctx, stmt, args).Scan(&balance.ID, &balance.Balance, &balance.UserID, &balance.CreatedAt, &balance.UpdatedAt)
-
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Balance{}, nil
@@ -46,7 +45,6 @@ func (b *balanceRepository) UpdateBalance(ctx context.Context, userID int64, acc
 
 		var currentBalance float64
 		err := tx.QueryRow(ctx, stmtSelect, selectArgs).Scan(&currentBalance)
-
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				// Баланс не существует, создаём новую запись
@@ -155,6 +153,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		return nil
 	})
 }
+
 func (b *balanceRepository) Withdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
 	var withdrawals []domain.Withdraw
 	stmt := `select id,sum, processed_at from "withdraw" where user_id = @userID`

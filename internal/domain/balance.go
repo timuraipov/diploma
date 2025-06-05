@@ -11,9 +11,7 @@ type BalanceResponse struct {
 	Withdrawn float64 `json:"withdrawn"`
 }
 
-var (
-	ErrInsufficientFunds = errors.New("insufficient funds for this operation ")
-)
+var ErrInsufficientFunds = errors.New("insufficient funds for this operation ")
 
 type Balance struct {
 	ID        int64     `json:"id" omitempty:"true"`

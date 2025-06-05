@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-var (
-	ErrWithdrawAlreadyUsed = errors.New("order already used")
-)
+var ErrWithdrawAlreadyUsed = errors.New("order already used")
 
 type Withdraw struct {
 	ID          string    `json:"order" omitempty:"true"`
