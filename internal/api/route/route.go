@@ -12,8 +12,8 @@ import (
 
 func Setup(logger *logging.ZapLogger, cfg *bootstrap.Config, timeout time.Duration, db db.DB, r *chi.Mux) {
 	r.Group(func(r chi.Router) {
-		NewLoginRouter(logger, cfg, timeout, db, r)
-		NewRegisterRouter(logger, cfg, timeout, db, r)
+		NewLoginRouter(logger, cfg, db, r)
+		NewRegisterRouter(logger, cfg, db, r)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.JwtAuthMiddleware(cfg.AccessTokenSecret))

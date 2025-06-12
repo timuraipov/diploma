@@ -93,6 +93,10 @@ func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Or
 		}
 		orders = append(orders, order)
 	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
 	return orders, nil
 }
 
@@ -111,6 +115,10 @@ func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Orde
 			return nil, err
 		}
 		orders = append(orders, order)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 	return orders, nil
 }

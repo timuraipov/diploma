@@ -177,5 +177,9 @@ func (b *balanceRepository) Withdrawals(ctx context.Context, userID int64) ([]do
 
 		withdrawals = append(withdrawals, withdraw)
 	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
 	return withdrawals, nil
 }

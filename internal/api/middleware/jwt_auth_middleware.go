@@ -16,19 +16,15 @@ func JwtAuthMiddleware(secret string) func(http.Handler) http.Handler {
 			t := strings.Split(authHeader, " ")
 			if len(t) == 2 {
 				authToken := t[1]
-				authorized, err := tokenutil.IsAuthorized(authToken, secret)
-				if authorized {
-					userID, err := tokenutil.ExtractIDFromToken(authToken, secret)
-					if err != nil {
-						http.Error(w, jsonError(err.Error()), http.StatusUnauthorized)
-						return
-					}
-					ctx := context.WithValue(r.Context(), domain.UserIDHeader, userID)
-					next.ServeHTTP(w, r.WithContext(ctx))
+				userID, err := tokenutil.ExtractIDFromToken(authToken, secret)
+				if err != nil {
+					http.Error(w, jsonError(err.Error()), http.StatusUnauthorized)
 					return
 				}
-				http.Error(w, jsonError(err.Error()), http.StatusUnauthorized)
+				ctx := context.WithValue(r.Context(), domain.UserIDHeader, userID)
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
+
 			}
 			http.Error(w, jsonError("Not authorized"), http.StatusUnauthorized)
 		})
