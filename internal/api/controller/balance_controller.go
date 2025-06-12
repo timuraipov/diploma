@@ -10,6 +10,7 @@ import (
 	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/pkg/logging"
+	"go.uber.org/zap"
 )
 
 type BalanceController struct {
@@ -34,7 +35,7 @@ func (b *BalanceController) GetBalance(w http.ResponseWriter, r *http.Request) {
 	}
 	balance, err := b.balanceUseCase.GetBalance(r.Context(), userID)
 	if err != nil {
-		b.l.ErrorCtx(r.Context(), err.Error())
+		b.l.ErrorCtx(r.Context(), "balance method error", zap.Error(err))
 		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
@@ -72,7 +73,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
-		b.l.ErrorCtx(r.Context(), err.Error())
+		b.l.ErrorCtx(r.Context(), "withdraw method error", zap.Error(err))
 		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
