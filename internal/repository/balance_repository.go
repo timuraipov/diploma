@@ -88,7 +88,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 	return withTransaction(ctx, b.database.Pool, func(tx pgx.Tx) error {
 		// Проверка: был ли уже использован этот ID
 		const stmtWithdrawExist = `
-		SELECT id FROM "withdraw" WHERE id = @orderID`
+		SELECT id FROM "withdraw" WHERE order_id = @orderID`
 		withdrawExistsArgs := pgx.NamedArgs{
 			"orderID": withdraw.OrderID,
 		}
@@ -144,7 +144,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 			"userID":      withdraw.UserID,
 			"processedAt": time.Now(),
 		}
-		var withdrawID string
+		var withdrawID int64
 		err = tx.QueryRow(ctx, stmtWithdrawInsert, withdrawInsertArgs).Scan(&withdrawID)
 		if err != nil {
 			return err
