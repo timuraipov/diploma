@@ -97,14 +97,14 @@ func TestBalanceController_Withdrawals(t *testing.T) {
 	assert.NoError(t, err)
 	withdrawRequests := []domain.Withdraw{
 		{
-			ID:          "order1",
+			OrderID:     "order1",
 			Sum:         20.1,
 			UserID:      1,
 			ProcessedAt: time.Now(), // time.Now().Format(time.RFC3339),
 
 		},
 		{
-			ID:          "order2",
+			OrderID:     "order2",
 			Sum:         11.12,
 			UserID:      1,
 			ProcessedAt: time.Now(),

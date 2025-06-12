@@ -50,7 +50,7 @@ func (b *MockBalanceRepository) UpdateBalance(ctx context.Context, userID int64,
 }
 
 func (b *MockBalanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdraw) error {
-	_, ok := b.withdrawals[withdraw.ID]
+	_, ok := b.withdrawals[withdraw.OrderID]
 	if ok {
 		return domain.ErrOrderAlreadyProcessedByAnotherUser
 	}
@@ -58,7 +58,7 @@ func (b *MockBalanceRepository) Withdraw(ctx context.Context, withdraw domain.Wi
 	if err != nil || balance.Balance < withdraw.Sum {
 		return domain.ErrInsufficientFunds
 	}
-	b.withdrawals[withdraw.ID] = withdraw
+	b.withdrawals[withdraw.OrderID] = withdraw
 	balance.Balance -= withdraw.Sum
 
 	return nil

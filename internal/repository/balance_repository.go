@@ -135,11 +135,11 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		// Вставка записи в "withdraw"
 		const stmtWithdrawInsert = `
 		INSERT INTO "withdraw" 
-		(id, sum, user_id, processed_at)
-		VALUES (@id, @sum, @userID, @processedAt)
+		(order_id, sum, user_id, processed_at)
+		VALUES (@orderID, @sum, @userID, @processedAt)
 		RETURNING id`
 		withdrawInsertArgs := pgx.NamedArgs{
-			"id":          withdraw.ID,
+			"orderID":     withdraw.OrderID,
 			"sum":         withdraw.Sum,
 			"userID":      withdraw.UserID,
 			"processedAt": time.Now(),
@@ -156,7 +156,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 
 func (b *balanceRepository) Withdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
 	var withdrawals []domain.Withdraw
-	stmt := `select id,sum, processed_at from "withdraw" where user_id = @userID`
+	stmt := `select id,order_id, sum, processed_at from "withdraw" where user_id = @userID`
 	args := pgx.NamedArgs{
 		"userID": userID,
 	}

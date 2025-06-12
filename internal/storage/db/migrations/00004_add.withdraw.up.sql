@@ -1,5 +1,6 @@
-CREATE TABLE  IF NOT EXISTS  "withdraw"(
-    id          VARCHAR(30) PRIMARY KEY ,
+CREATE TABLE  IF NOT EXISTS  withdraw (
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY 
+    order_id          VARCHAR(30)  ,
     sum     DOUBLE PRECISION NOT NULL,
     user_id     INT NOT NULL,
     processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now() 

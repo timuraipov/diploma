@@ -58,7 +58,7 @@ func (b *balanceUseCase) Withdrawals(ctx context.Context, userID int64) ([]domai
 	for _, withdraw := range withdrawals {
 		withdrawRFC := &domain.WithdrawResponse{
 			Sum:         withdraw.Sum,
-			ID:          withdraw.ID,
+			OrderID:     withdraw.OrderID,
 			ProcessedAt: withdraw.ProcessedAt.Format(time.RFC3339),
 		}
 		withdrawResponse = append(withdrawResponse, *withdrawRFC)

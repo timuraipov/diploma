@@ -57,7 +57,7 @@ func (b *BalanceController) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	withdraw := domain.Withdraw{
-		ID:          request.Order,
+		OrderID:     request.Order,
 		Sum:         request.Sum,
 		UserID:      userID,
 		ProcessedAt: time.Now(), // time.Now().Format(time.RFC3339),
