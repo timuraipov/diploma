@@ -90,7 +90,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		const stmtWithdrawExist = `
 		SELECT id FROM "withdraw" WHERE id = @orderID`
 		withdrawExistsArgs := pgx.NamedArgs{
-			"orderID": withdraw.ID,
+			"orderID": withdraw.OrderID,
 		}
 		var withdrawAlreadyExist string
 		err := tx.QueryRow(ctx, stmtWithdrawExist, withdrawExistsArgs).Scan(&withdrawAlreadyExist)
@@ -170,7 +170,7 @@ func (b *balanceRepository) Withdrawals(ctx context.Context, userID int64) ([]do
 	defer rows.Close()
 	for rows.Next() {
 		var withdraw domain.Withdraw
-		err = rows.Scan(&withdraw.ID, &withdraw.Sum, &withdraw.ProcessedAt)
+		err = rows.Scan(&withdraw.ID, withdraw.OrderID, &withdraw.Sum, &withdraw.ProcessedAt)
 		if err != nil {
 			return nil, err
 		}
