@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/pkg/logging"
 )
@@ -14,14 +13,12 @@ import (
 type LoginController struct {
 	l            *logging.ZapLogger
 	loginUsecase domain.LoginUsecase
-	cfg          *bootstrap.Config
 }
 
-func NewLoginController(logger *logging.ZapLogger, loginUsecase domain.LoginUsecase, cfg *bootstrap.Config) *LoginController {
+func NewLoginController(logger *logging.ZapLogger, loginUsecase domain.LoginUsecase) *LoginController {
 	return &LoginController{
 		l:            logger,
 		loginUsecase: loginUsecase,
-		cfg:          cfg,
 	}
 }
 

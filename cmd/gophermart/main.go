@@ -1,28 +1,21 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/api/route"
 	"github.com/timuraipov/diploma/internal/storage/db"
-	"github.com/timuraipov/diploma/internal/worker"
-	"github.com/timuraipov/diploma/pkg/logging"
 	"go.uber.org/zap"
 )
 
 func main() {
-	l, err := logging.NewZapLogger(zap.InfoLevel)
-	if err != nil {
-		panic(err)
-	}
+
 	app, err := bootstrap.App()
 	if err != nil {
 		panic(err)
@@ -30,21 +23,15 @@ func main() {
 	if err := db.RunMigrations(app.Cfg.DSN); err != nil {
 		panic(err)
 	}
-	timeout := time.Duration(app.Cfg.ContextTimeout) * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	// Listen for syscall signals for process to interrupt/quit
-	defer cancel()
-	db, err := db.NewDB(ctx, app.Cfg.DSN)
-	if err != nil {
-		panic(err)
-	}
+	defer app.Cancel()
+
 	defer func() {
-		l.InfoCtx(ctx, "Close DB pool connections", zap.Error(err))
-		db.Pool.Close()
+		app.Logger.InfoCtx(app.Ctx, "Close DB pool connections", zap.Error(err))
+		app.DB.Pool.Close()
 	}()
-	go worker.RunWorker(l, *db, app.Cfg, timeout)
 	r := chi.NewRouter()
-	route.Setup(l, app.Cfg, timeout, *db, r)
+	route.Setup(app.Logger, app.Cfg, app.Timeout, *app.DB, r)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
@@ -53,21 +40,21 @@ func main() {
 		Handler: r,
 	}
 	go func() {
-		l.InfoCtx(ctx, "Try to start server")
+		app.Logger.InfoCtx(app.Ctx, "Try to start server")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			l.FatalCtx(ctx, "Server error: %s", zap.Error(err))
+			app.Logger.FatalCtx(app.Ctx, "Server error: %s", zap.Error(err))
 		}
 	}()
 
 	<-stop
-	l.InfoCtx(ctx, "Shutting down server...")
+	app.Logger.InfoCtx(app.Ctx, "Shutting down server...")
 
 	// Контекст с таймаутом
 
 	// Корректное завершение
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(app.Ctx); err != nil {
 		log.Fatalf("Graceful shutdown failed: %s", err)
 	}
 
-	l.InfoCtx(ctx, "Server gracefully stopped")
+	app.Logger.InfoCtx(app.Ctx, "Server gracefully stopped")
 }

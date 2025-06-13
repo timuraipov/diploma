@@ -10,6 +10,12 @@ var (
 	ErrIncorrectLoginOrPassword = errors.New("login request has incorrect login or password")
 )
 
+type AuthSecret struct {
+	AccessTokenExpiryHour  int
+	RefreshTokenExpiryHour int
+	AccessTokenSecret      string
+	RefreshTokenSecret     string
+}
 type User struct {
 	ID       int64  `json:"id"`
 	Login    string `json:"login"`

@@ -20,7 +20,7 @@ type Config struct {
 
 var once sync.Once
 
-func MustLoad() *Config {
+func MustLoad() (*Config, error) {
 	cfg := &Config{}
 
 	once.Do(func() {
@@ -33,7 +33,7 @@ func MustLoad() *Config {
 
 	err := env.Parse(cfg)
 	if err != nil {
-		panic(`env file parse error: ` + err.Error())
+		panic(err)
 	}
-	return cfg
+	return cfg, nil
 }

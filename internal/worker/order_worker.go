@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/client"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/internal/repository"
@@ -22,8 +21,8 @@ type OrderWorker struct {
 	cancel       context.CancelFunc
 }
 
-func RunWorker(l *logging.ZapLogger, db db.DB, cfg *bootstrap.Config, timeout time.Duration) {
-	accrualClient := client.NewClient(cfg.AccrualAddress)
+func RunWorker(l *logging.ZapLogger, db db.DB, accrualLink string, timeout time.Duration) {
+	accrualClient := client.NewClient(accrualLink)
 	br := repository.NewBalanceRepository(db)
 	balanceUseCase := usecase.NewBalanceUseCase(l, br, timeout)
 	orderRepository := repository.NewOrderRepository(db)

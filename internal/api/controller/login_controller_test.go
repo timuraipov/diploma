@@ -22,17 +22,22 @@ func setupLoginTestEnvironment(t *testing.T) (*LoginController, func()) {
 	logger, err := logging.NewZapLogger(zap.DebugLevel)
 	require.NoError(t, err)
 
-	cfg := bootstrap.MustLoad()
-
+	cfg, err := bootstrap.MustLoad()
+	assert.NoError(t, err)
 	// Настройка mock-репозитория
 	userRepo := mocks.NewMockUserRepository()
-
+	authSecret := domain.AuthSecret{
+		AccessTokenSecret:      cfg.AccessTokenSecret,
+		RefreshTokenSecret:     cfg.RefreshTokenSecret,
+		AccessTokenExpiryHour:  cfg.AccessTokenExpiryHour,
+		RefreshTokenExpiryHour: cfg.RefreshTokenExpiryHour,
+	}
 	// Создание usecase
-	loginUseCase := usecase.NewLoginUsecase(logger, &userRepo, cfg)
+	loginUseCase := usecase.NewLoginUsecase(logger, &userRepo, authSecret)
 
 	// Создание контроллера
-	loginController := NewLoginController(logger, loginUseCase, cfg)
-	userUseCase := usecase.NewRegisterUsecase(logger, &userRepo, cfg)
+	loginController := NewLoginController(logger, loginUseCase)
+	userUseCase := usecase.NewRegisterUsecase(logger, &userRepo, authSecret)
 	userRequest := domain.RegisterRequest{
 		Login:    "testuser",
 		Password: "testpassword",

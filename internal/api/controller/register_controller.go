@@ -14,14 +14,12 @@ import (
 type RegisterController struct {
 	l               *logging.ZapLogger
 	registerUsecase domain.RegisterUsecase
-	cfg             *bootstrap.Config
 }
 
 func NewRegisterController(logger *logging.ZapLogger, ru domain.RegisterUsecase, cfg *bootstrap.Config) *RegisterController {
 	return &RegisterController{
 		l:               logger,
 		registerUsecase: ru,
-		cfg:             cfg,
 	}
 }
 

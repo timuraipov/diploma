@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 
-	"github.com/timuraipov/diploma/bootstrap"
 	"github.com/timuraipov/diploma/internal/domain"
 	"github.com/timuraipov/diploma/internal/tokenutil"
 	"github.com/timuraipov/diploma/pkg/logging"
@@ -14,14 +13,14 @@ import (
 type RegisterUsecase struct {
 	l              *logging.ZapLogger
 	userRepository domain.UserRepository
-	cfg            *bootstrap.Config
+	authSecret     domain.AuthSecret
 }
 
-func NewRegisterUsecase(logger *logging.ZapLogger, userRepository domain.UserRepository, cfg *bootstrap.Config) domain.RegisterUsecase {
+func NewRegisterUsecase(logger *logging.ZapLogger, userRepository domain.UserRepository, authSecret domain.AuthSecret) domain.RegisterUsecase {
 	return &RegisterUsecase{
 		l:              logger,
 		userRepository: userRepository,
-		cfg:            cfg,
+		authSecret:     authSecret,
 	}
 }
 
@@ -48,7 +47,7 @@ func (ru *RegisterUsecase) Create(ctx context.Context, userRequest domain.Regist
 		ru.l.ErrorCtx(ctx, err.Error())
 		return domain.AuthResponse{}, err
 	}
-	authResp, err := tokenutil.GetTokensByUser(&user, ru.cfg.AccessTokenSecret, ru.cfg.RefreshTokenSecret, ru.cfg.AccessTokenExpiryHour, ru.cfg.RefreshTokenExpiryHour)
+	authResp, err := tokenutil.GetTokensByUser(&user, ru.authSecret.AccessTokenSecret, ru.authSecret.RefreshTokenSecret, ru.authSecret.AccessTokenExpiryHour, ru.authSecret.RefreshTokenExpiryHour)
 	if err != nil {
 		ru.l.ErrorCtx(ctx, "Something wrong with generating access/refresh tokens", zap.Error(err))
 		return domain.AuthResponse{}, err

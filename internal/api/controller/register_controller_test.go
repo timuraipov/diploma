@@ -28,10 +28,17 @@ func setupTestRegisterEnvironment(t *testing.T) (*RegisterController, func()) {
 	if err != nil {
 		t.Fatalf("failed to create logger: %v", err)
 	}
-	cfg := bootstrap.MustLoad()
+	cfg, err := bootstrap.MustLoad()
+	assert.NoError(t, err)
+	authSecret := domain.AuthSecret{
+		AccessTokenSecret:      cfg.AccessTokenSecret,
+		RefreshTokenSecret:     cfg.RefreshTokenSecret,
+		AccessTokenExpiryHour:  cfg.AccessTokenExpiryHour,
+		RefreshTokenExpiryHour: cfg.RefreshTokenExpiryHour,
+	}
 	// Настройка тестовой базы данных
 	userRepo := setupTestRegisterRepository(t)
-	userUseCase := usecase.NewRegisterUsecase(logger, userRepo, cfg)
+	userUseCase := usecase.NewRegisterUsecase(logger, userRepo, authSecret)
 
 	// Создание контроллера
 	registerController := NewRegisterController(logger, userUseCase, cfg)
