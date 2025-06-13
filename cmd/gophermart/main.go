@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-
 	app, err := bootstrap.App()
 	if err != nil {
 		panic(err)
