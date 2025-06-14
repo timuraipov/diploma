@@ -1,0 +1,24 @@
+version: '3'
+tasks:
+  migrate:
+    aliases:
+      - migrate
+    desc: 'run migrations'
+    cmds:
+      - go run cmd/migrator/main.go
+  app:
+    desc: 'run app'
+    cmds:
+      - go run cmd/gophermart/main.go
+  test:
+    desc: 'run tests'
+    cmds:
+      - DATABASE_URI=postgres://postgres:postgres@localhost:5432/gophermart_test?sslmode=disable go test -p 1 ./...  -coverprofile=coverage.out count=1
+  lint:
+    desc: 'run linters'
+    cmds:
+      - golangci-lint run
+  fmt:
+    desc: 'run formatter'
+    cmds:
+      - ~/go/bin/gofumpt -l -w .

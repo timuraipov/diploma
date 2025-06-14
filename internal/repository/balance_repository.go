@@ -1,0 +1,171 @@
+package repository
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/timuraipov/diploma/internal/domain"
+	"github.com/timuraipov/diploma/internal/storage/db"
+)
+
+type BalanceRepository struct {
+	database db.DB
+}
+
+func NewBalanceRepository(db db.DB) *BalanceRepository {
+	return &BalanceRepository{
+		database: db,
+	}
+}
+
+func (b *BalanceRepository) GetBalance(ctx context.Context, userID int64) (domain.Balance, error) {
+	var balance domain.Balance
+
+	args := pgx.NamedArgs{
+		"userID": userID,
+	}
+	err := b.database.Pool.QueryRow(ctx, GetBalanceGetBalanceEntityByUserID, args).Scan(&balance.ID, &balance.Balance, &balance.UserID, &balance.CreatedAt, &balance.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Balance{}, nil
+		}
+	}
+	return balance, err
+}
+
+func (b *BalanceRepository) UpdateBalance(ctx context.Context, userID int64, accrual float64) error {
+	return withTransaction(ctx, b.database.Pool, func(tx pgx.Tx) error {
+
+		selectArgs := pgx.NamedArgs{
+			"userID": userID,
+		}
+
+		var currentBalance float64
+		err := tx.QueryRow(ctx, UpdateBalanceGetBalanceByUserID, selectArgs).Scan(&currentBalance)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				// Баланс не существует, создаём новую запись
+
+				now := time.Now()
+				insertArgs := pgx.NamedArgs{
+					"balance":   accrual,
+					"userID":    userID,
+					"createdAt": now,
+					"updatedAt": now,
+				}
+				var id int64
+				err = tx.QueryRow(ctx, UpdateBalanceInsertNewBalanceEntity, insertArgs).Scan(&id)
+				return err
+			}
+			// Другая ошибка при выборке
+			return err
+		}
+
+		// Баланс существует, обновляем его
+
+		updateArgs := pgx.NamedArgs{
+			"accrual":   accrual,
+			"userID":    userID,
+			"updatedAt": time.Now(),
+		}
+		var updatedBalance float64
+		err = tx.QueryRow(ctx, UpdateBalanceUpdateBalance, updateArgs).Scan(&updatedBalance)
+		return err
+	})
+}
+
+func (b *BalanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdraw) error {
+	return withTransaction(ctx, b.database.Pool, func(tx pgx.Tx) error {
+		// Проверка: был ли уже использован этот ID
+
+		withdrawExistsArgs := pgx.NamedArgs{
+			"orderID": withdraw.OrderID,
+		}
+		var withdrawAlreadyExist string
+		err := tx.QueryRow(ctx, WithdrawGetWithdrawByUserID, withdrawExistsArgs).Scan(&withdrawAlreadyExist)
+		if err == nil {
+			return domain.ErrWithdrawAlreadyUsed
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
+
+		// Получение текущего баланса
+
+		balanceArgs := pgx.NamedArgs{
+			"userID": withdraw.UserID,
+		}
+		var balance float64
+		err = tx.QueryRow(ctx, UpdateBalanceGetBalanceByUserID, balanceArgs).Scan(&balance)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
+		if errors.Is(err, pgx.ErrNoRows) || balance < withdraw.Sum {
+			return domain.ErrInsufficientFunds
+		}
+
+		// Списание средств
+		balanceUpdateArgs := pgx.NamedArgs{
+			"userID":    withdraw.UserID,
+			"updatedAt": time.Now(),
+			"accrual":   withdraw.Sum,
+		}
+		var finalBalance float64
+		err = tx.QueryRow(ctx, WithdrawUpdateBalance, balanceUpdateArgs).Scan(&finalBalance)
+		if err != nil {
+			return err
+		}
+
+		// Вставка записи в "withdraw"
+		const stmtWithdrawInsert = `
+		INSERT INTO "withdraw" 
+		(order_id, sum, user_id, processed_at)
+		VALUES (@orderID, @sum, @userID, @processedAt)
+		RETURNING id`
+		withdrawInsertArgs := pgx.NamedArgs{
+			"orderID":     withdraw.OrderID,
+			"sum":         withdraw.Sum,
+			"userID":      withdraw.UserID,
+			"processedAt": time.Now(),
+		}
+		var withdrawID int64
+		err = tx.QueryRow(ctx, stmtWithdrawInsert, withdrawInsertArgs).Scan(&withdrawID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (b *BalanceRepository) Withdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
+	var withdrawals []domain.Withdraw
+	stmt := `select id,order_id, sum, processed_at from "withdraw" where user_id = @userID`
+	args := pgx.NamedArgs{
+		"userID": userID,
+	}
+	rows, err := b.database.Pool.Query(ctx, stmt, args)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []domain.Withdraw{}, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var withdraw domain.Withdraw
+		err = rows.Scan(&withdraw.ID, &withdraw.OrderID, &withdraw.Sum, &withdraw.ProcessedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		withdrawals = append(withdrawals, withdraw)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return withdrawals, nil
+}
