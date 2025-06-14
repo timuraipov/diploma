@@ -10,23 +10,23 @@ import (
 	"github.com/timuraipov/diploma/internal/storage/db"
 )
 
-type balanceRepository struct {
+type BalanceRepository struct {
 	database db.DB
 }
 
-func NewBalanceRepository(db db.DB) *balanceRepository {
-	return &balanceRepository{
+func NewBalanceRepository(db db.DB) *BalanceRepository {
+	return &BalanceRepository{
 		database: db,
 	}
 }
 
-func (b *balanceRepository) GetBalance(ctx context.Context, userID int64) (domain.Balance, error) {
+func (b *BalanceRepository) GetBalance(ctx context.Context, userID int64) (domain.Balance, error) {
 	var balance domain.Balance
-	stmt := `SELECT id,balance,user_id,created_at,updated_at FROM "balance" where user_id=@userID`
+
 	args := pgx.NamedArgs{
 		"userID": userID,
 	}
-	err := b.database.Pool.QueryRow(ctx, stmt, args).Scan(&balance.ID, &balance.Balance, &balance.UserID, &balance.CreatedAt, &balance.UpdatedAt)
+	err := b.database.Pool.QueryRow(ctx, GetBalanceGetBalanceEntityByUserID, args).Scan(&balance.ID, &balance.Balance, &balance.UserID, &balance.CreatedAt, &balance.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Balance{}, nil
@@ -35,23 +35,19 @@ func (b *balanceRepository) GetBalance(ctx context.Context, userID int64) (domai
 	return balance, err
 }
 
-func (b *balanceRepository) UpdateBalance(ctx context.Context, userID int64, accrual float64) error {
+func (b *BalanceRepository) UpdateBalance(ctx context.Context, userID int64, accrual float64) error {
 	return withTransaction(ctx, b.database.Pool, func(tx pgx.Tx) error {
-		const stmtSelect = `
-		SELECT balance FROM "balance" WHERE user_id = @userID`
+
 		selectArgs := pgx.NamedArgs{
 			"userID": userID,
 		}
 
 		var currentBalance float64
-		err := tx.QueryRow(ctx, stmtSelect, selectArgs).Scan(&currentBalance)
+		err := tx.QueryRow(ctx, UpdateBalanceGetBalanceByUserID, selectArgs).Scan(&currentBalance)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				// Баланс не существует, создаём новую запись
-				const stmtInsert = `
-				INSERT INTO "balance" (balance, user_id, created_at, updated_at)
-				VALUES (@balance, @userID, @createdAt, @updatedAt)
-				RETURNING id`
+
 				now := time.Now()
 				insertArgs := pgx.NamedArgs{
 					"balance":   accrual,
@@ -60,7 +56,7 @@ func (b *balanceRepository) UpdateBalance(ctx context.Context, userID int64, acc
 					"updatedAt": now,
 				}
 				var id int64
-				err = tx.QueryRow(ctx, stmtInsert, insertArgs).Scan(&id)
+				err = tx.QueryRow(ctx, UpdateBalanceInsertNewBalanceEntity, insertArgs).Scan(&id)
 				return err
 			}
 			// Другая ошибка при выборке
@@ -68,32 +64,27 @@ func (b *balanceRepository) UpdateBalance(ctx context.Context, userID int64, acc
 		}
 
 		// Баланс существует, обновляем его
-		const stmtUpdate = `
-		UPDATE "balance"
-		SET balance = balance + @accrual, updated_at = @updatedAt
-		WHERE user_id = @userID
-		RETURNING balance`
+
 		updateArgs := pgx.NamedArgs{
 			"accrual":   accrual,
 			"userID":    userID,
 			"updatedAt": time.Now(),
 		}
 		var updatedBalance float64
-		err = tx.QueryRow(ctx, stmtUpdate, updateArgs).Scan(&updatedBalance)
+		err = tx.QueryRow(ctx, UpdateBalanceUpdateBalance, updateArgs).Scan(&updatedBalance)
 		return err
 	})
 }
 
-func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdraw) error {
+func (b *BalanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdraw) error {
 	return withTransaction(ctx, b.database.Pool, func(tx pgx.Tx) error {
 		// Проверка: был ли уже использован этот ID
-		const stmtWithdrawExist = `
-		SELECT id FROM "withdraw" WHERE order_id = @orderID`
+
 		withdrawExistsArgs := pgx.NamedArgs{
 			"orderID": withdraw.OrderID,
 		}
 		var withdrawAlreadyExist string
-		err := tx.QueryRow(ctx, stmtWithdrawExist, withdrawExistsArgs).Scan(&withdrawAlreadyExist)
+		err := tx.QueryRow(ctx, WithdrawGetWithdrawByUserID, withdrawExistsArgs).Scan(&withdrawAlreadyExist)
 		if err == nil {
 			return domain.ErrWithdrawAlreadyUsed
 		}
@@ -102,12 +93,12 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		}
 
 		// Получение текущего баланса
-		const stmtBalanceSelect = `SELECT balance.balance FROM "balance" WHERE user_id = @userID`
+
 		balanceArgs := pgx.NamedArgs{
 			"userID": withdraw.UserID,
 		}
 		var balance float64
-		err = tx.QueryRow(ctx, stmtBalanceSelect, balanceArgs).Scan(&balance)
+		err = tx.QueryRow(ctx, UpdateBalanceGetBalanceByUserID, balanceArgs).Scan(&balance)
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
@@ -116,18 +107,13 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 		}
 
 		// Списание средств
-		const stmtBalanceUpdate = `
-		UPDATE "balance" 
-		SET balance = balance - @accrual, updated_at = @updatedAt
-		WHERE user_id = @userID
-		RETURNING balance`
 		balanceUpdateArgs := pgx.NamedArgs{
 			"userID":    withdraw.UserID,
 			"updatedAt": time.Now(),
 			"accrual":   withdraw.Sum,
 		}
 		var finalBalance float64
-		err = tx.QueryRow(ctx, stmtBalanceUpdate, balanceUpdateArgs).Scan(&finalBalance)
+		err = tx.QueryRow(ctx, WithdrawUpdateBalance, balanceUpdateArgs).Scan(&finalBalance)
 		if err != nil {
 			return err
 		}
@@ -154,7 +140,7 @@ func (b *balanceRepository) Withdraw(ctx context.Context, withdraw domain.Withdr
 	})
 }
 
-func (b *balanceRepository) Withdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
+func (b *BalanceRepository) Withdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
 	var withdrawals []domain.Withdraw
 	stmt := `select id,order_id, sum, processed_at from "withdraw" where user_id = @userID`
 	args := pgx.NamedArgs{

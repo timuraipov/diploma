@@ -27,19 +27,17 @@ func (rc *RegisterController) Register(w http.ResponseWriter, r *http.Request) {
 	var request domain.RegisterRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		http.Error(w, jsonError(err.Error()), http.StatusBadRequest)
+		handleErrorResponse(rc.l, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	signupResponse, err := rc.registerUsecase.Create(r.Context(), request)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserAlreadyRegistered) {
-			rc.l.ErrorCtx(r.Context(), err.Error())
-			http.Error(w, jsonError(err.Error()), http.StatusConflict)
+			handleErrorResponse(rc.l, w, r, err, http.StatusConflict)
 			return
 		}
-		rc.l.ErrorCtx(r.Context(), err.Error())
-		http.Error(w, jsonError(err.Error()), http.StatusInternalServerError)
+		handleErrorResponse(rc.l, w, r, err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Authorization", "x-user-id "+signupResponse.AccessToken)

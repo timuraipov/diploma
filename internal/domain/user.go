@@ -8,6 +8,7 @@ import (
 var (
 	ErrUserNotFound             = errors.New("user with such id not found")
 	ErrIncorrectLoginOrPassword = errors.New("login request has incorrect login or password")
+	ErrUserIDNotFound           = errors.New("cannot get userId from context")
 )
 
 type AuthSecret struct {

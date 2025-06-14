@@ -12,7 +12,7 @@ import (
 	"github.com/timuraipov/diploma/internal/storage/db"
 )
 
-var testRepositoryOrder *orderRepository
+var testRepositoryOrder *OrderRepository
 
 func setupTestDBOrder(t *testing.T) {
 	dsn := os.Getenv("DATABASE_URI")

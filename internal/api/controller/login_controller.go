@@ -27,19 +27,18 @@ func (l *LoginController) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		http.Error(w, jsonError(err.Error()), http.StatusBadRequest)
+		handleErrorResponse(l.l, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	authResponse, err := l.loginUsecase.Login(r.Context(), request)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			handleErrorResponse(l.l, w, r, err, http.StatusNotFound)
 			return
 		}
 		if errors.Is(err, domain.ErrIncorrectLoginOrPassword) {
-			w.WriteHeader(http.StatusUnauthorized)
+			handleErrorResponse(l.l, w, r, err, http.StatusUnauthorized)
 		}
 
 	}

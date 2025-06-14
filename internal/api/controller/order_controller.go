@@ -31,8 +31,7 @@ func NewOrderController(l *logging.ZapLogger, orderUseCase domain.OrderUseCase, 
 func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
 	if !ok {
-		o.l.ErrorCtx(r.Context(), "Cannot get userId from context")
-		w.WriteHeader(http.StatusUnauthorized)
+		handleErrorResponse(o.l, w, r, domain.ErrUserIDNotFound, http.StatusUnauthorized)
 	}
 	orderID, err := io.ReadAll(bufio.NewReader(r.Body))
 	if err != nil {
@@ -40,8 +39,7 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	}
 	o.l.InfoCtx(r.Context(), "token given", zap.Any("order---", orderID))
 	if string(orderID) == "" {
-		o.l.ErrorCtx(r.Context(), "orderId is empty")
-		w.WriteHeader(http.StatusUnprocessableEntity)
+		handleErrorResponse(o.l, w, r, domain.ErrOrderNotFound, http.StatusUnprocessableEntity)
 		return
 	}
 	o.l.InfoCtx(r.Context(), "orderId", zap.Any("orderId", orderID))
@@ -61,12 +59,11 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, domain.ErrOrderAlreadyProcessedByAnotherUser) {
-			w.WriteHeader(http.StatusConflict)
+			handleErrorResponse(o.l, w, r, err, http.StatusConflict)
 			return
 		}
 		if errors.Is(err, domain.ErrIncorrectOrderIDFormat) {
-			o.l.ErrorCtx(r.Context(), "incorrect orderID format")
-			w.WriteHeader(http.StatusUnprocessableEntity)
+			handleErrorResponse(o.l, w, r, err, http.StatusUnprocessableEntity)
 			return
 		}
 	}
@@ -76,15 +73,13 @@ func (o *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 func (o *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(domain.UserIDHeader).(int64)
 	if !ok {
-		o.l.ErrorCtx(r.Context(), "Cannot get userId from context")
-		w.WriteHeader(http.StatusUnauthorized)
+		handleErrorResponse(o.l, w, r, domain.ErrUserIDNotFound, http.StatusUnauthorized)
 	}
 	o.l.InfoCtx(r.Context(), "userID", zap.Int64("userID", userID))
 	orders, err := o.orderUseCase.GetAll(r.Context(), userID)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
-		o.l.ErrorCtx(r.Context(), err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		handleErrorResponse(o.l, w, r, err, http.StatusInternalServerError)
 		return
 	}
 	if len(orders) == 0 {

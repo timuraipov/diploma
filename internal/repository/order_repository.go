@@ -10,28 +10,20 @@ import (
 	"github.com/timuraipov/diploma/internal/storage/db"
 )
 
-type orderRepository struct {
+type OrderRepository struct {
 	database db.DB
 }
 
-func NewOrderRepository(db db.DB) *orderRepository {
-	return &orderRepository{
+func NewOrderRepository(db db.DB) *OrderRepository {
+	return &OrderRepository{
 		database: db,
 	}
 }
 
-func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
-	const stmtCheck = `SELECT id, status, accrual, user_id, uploaded_at 
-	FROM "order" 
-	WHERE id = @orderId`
+func (o *OrderRepository) Save(ctx context.Context, order domain.Order) error {
 	argsCheck := pgx.NamedArgs{
 		"orderId": order.ID,
 	}
-
-	const stmtExec = `INSERT INTO "order" 
-	(id, status, accrual, user_id, uploaded_at) 
-	VALUES (@id, @status, @accrual, @userID, @uploadedAt) 
-	RETURNING id`
 
 	argsInsert := pgx.NamedArgs{
 		"id":         order.ID,
@@ -43,7 +35,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 
 	return withTransaction(ctx, o.database.Pool, func(tx pgx.Tx) error {
 		var orderFound domain.Order
-		err := tx.QueryRow(ctx, stmtCheck, argsCheck).Scan(
+		err := tx.QueryRow(ctx, SaveGetOrderByID, argsCheck).Scan(
 			&orderFound.ID,
 			&orderFound.Status,
 			&orderFound.Accrual,
@@ -53,7 +45,7 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				// Заказа нет, вставляем новый
-				err = tx.QueryRow(ctx, stmtExec, argsInsert).Scan(&order.ID)
+				err = tx.QueryRow(ctx, SaveInsertNewOrder, argsInsert).Scan(&order.ID)
 				if err != nil {
 					return err
 				}
@@ -74,12 +66,12 @@ func (o *orderRepository) Save(ctx context.Context, order domain.Order) error {
 	})
 }
 
-func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
-	const stmt = `SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE user_id = @userID`
+func (o *OrderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Order, error) {
+
 	args := pgx.NamedArgs{
 		"userID": userID,
 	}
-	rows, err := o.database.Pool.Query(ctx, stmt, args)
+	rows, err := o.database.Pool.Query(ctx, GetAllSelectAllOrderByUserID, args)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +92,8 @@ func (o *orderRepository) GetAll(ctx context.Context, userID int64) ([]domain.Or
 	return orders, nil
 }
 
-func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
-	stmt := fmt.Sprintf(`SELECT id, status, accrual, user_id, uploaded_at FROM "order" WHERE status = '%s'  or status = '%s'`, domain.REGISTERED, domain.PROCESSING)
+func (o *OrderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Order, error) {
+	stmt := fmt.Sprintf(GetUnhandledOrdersGetOrder, domain.REGISTERED, domain.PROCESSING)
 	rows, err := o.database.Pool.Query(ctx, stmt)
 	if err != nil {
 		return nil, err
@@ -123,8 +115,8 @@ func (o *orderRepository) GetUnhandledOrders(ctx context.Context) ([]domain.Orde
 	return orders, nil
 }
 
-func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
-	const stmt = `UPDATE "order" SET status = @status, accrual = @accrual WHERE id = @id`
+func (o *OrderRepository) UpdateOrder(ctx context.Context, order domain.Order) error {
+
 	args := pgx.NamedArgs{
 		"id":      order.ID,
 		"status":  order.Status,
@@ -132,7 +124,7 @@ func (o *orderRepository) UpdateOrder(ctx context.Context, order domain.Order) e
 	}
 
 	return withTransaction(ctx, o.database.Pool, func(tx pgx.Tx) error {
-		ct, err := tx.Exec(ctx, stmt, args)
+		ct, err := tx.Exec(ctx, UpdateOrderUpdateOrderByID, args)
 		if err != nil {
 			return err
 		}
